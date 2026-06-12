@@ -225,6 +225,26 @@
     .del-sheet strong { font-size: 15px; font-weight: 600; }
     .del-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
 
+    /* offer message block */
+    .msg-block {
+      margin-top: 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.025)), var(--card);
+      border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow);
+      display: grid; gap: 10px;
+    }
+    .msg-label { font-size: 12px; font-weight: 700; color: var(--muted); }
+    .msg-body {
+      font-size: 13px; line-height: 1.7; color: var(--text);
+      white-space: pre-wrap;
+      background: rgba(255,255,255,.04); border: 1px solid var(--line);
+      border-radius: 12px; padding: 12px;
+    }
+    .msg-copy-btn {
+      color: white; background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      border-radius: 12px; padding: 11px; font-size: 13px; font-weight: 800;
+      box-shadow: 0 6px 18px rgba(139,92,246,.3);
+    }
+
     /* sort row */
     .sort-row { display: flex; gap: 6px; margin: 0 0 8px; }
     .sort-chip {
@@ -447,7 +467,7 @@
     function eventCard(e) {
       const d = fmtDate(e.date);
       return `
-        <article class="card" style="padding:13px;">
+        <article class="card" style="padding:13px; cursor:pointer;" data-ev-cands="${escapeHtml(e.id)}">
           <div class="event-card">
             <div class="datebox">
               <div class="md">${d.md}</div>
@@ -464,10 +484,10 @@
             <div class="right-info">
               <span class="badge ${badgeClass(e.status)}">${escapeHtml(e.status)}</span>
               <span class="count">${okCount(e.id)}/${e.slots||0}人</span>
+              <span class="arrow">›</span>
             </div>
           </div>
           <div class="ev-edit-area">
-            <button class="ev-edit-btn" data-ev-cands="${escapeHtml(e.id)}">候補を見る</button>
             <button class="ev-edit-btn" data-ev-edit="${escapeHtml(e.id)}">編集</button>
             <button class="ev-del-btn" data-ev-del="${escapeHtml(e.id)}">削除</button>
           </div>
@@ -504,10 +524,38 @@
         <div class="sort-row">${sortBtns}</div>
         ${candidates.length
           ? `<div class="cands-wrap">${candidates.map(candidateCard).join('')}</div>`
-          : `<div class="empty">候補がありません</div>`}`;
+          : `<div class="empty">候補がありません</div>`}
+        ${filter !== 'すべて' ? offerMsgBlock(filter) : ''}`;
       $$('.c-memo-text').forEach(ta => autoResize(ta));
     }
     function setCandSort(s) { candSort = s; render(); }
+
+    function offerMsgBlock(eventId) {
+      const ev = getEvent(eventId);
+      if (!ev) return '';
+      const d = new Date(ev.date + 'T00:00:00');
+      const dateStr = Number.isNaN(d.getTime()) ? ev.date
+        : `${d.getMonth()+1}月${d.getDate()}日`;
+      const msg = `お疲れ様です\n${dateStr} ${ev.name}、DJお願いしたいのですがご都合いかがでしょうか？\nご検討よろしくお願いします🙏`;
+      return `
+        <div class="msg-block">
+          <div class="msg-label">📋 オファー文</div>
+          <div class="msg-body">${escapeHtml(msg)}</div>
+          <button class="msg-copy-btn" data-msg="${escapeHtml(msg)}">コピー</button>
+        </div>`;
+    }
+
+    function copyMsg(msg) {
+      navigator.clipboard.writeText(msg).then(() => toast('コピーしました')).catch(() => {
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = msg; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        toast('コピーしました');
+      });
+    }
 
     function candidateCard(c) {
       const memoHtml = `<div class="c-memo-row"><textarea class="c-memo-text" rows="1" placeholder="メモ" data-memo-id="${escapeHtml(c.id)}">${escapeHtml(c.memo||'')}</textarea></div>`;
@@ -559,9 +607,11 @@
 
     /* ── イベントデリゲーション ── */
     document.addEventListener('click', e => {
-      // 候補を見る
-      const candsBtn = e.target.closest('[data-ev-cands]');
-      if (candsBtn) { showEventDetail(candsBtn.dataset.evCands); return; }
+      // イベントカードタップ → 候補へ（編集・削除ボタンは除く）
+      const evCard = e.target.closest('[data-ev-cands]');
+      if (evCard && !e.target.closest('[data-ev-edit]') && !e.target.closest('[data-ev-del]')) {
+        showEventDetail(evCard.dataset.evCands); return;
+      }
       // イベント編集
       const evEdit = e.target.closest('[data-ev-edit]');
       if (evEdit) { openEventDialog(evEdit.dataset.evEdit); return; }
@@ -580,6 +630,9 @@
       // 返答「見る」
       const jump = e.target.closest('[data-jump]');
       if (jump) { jumpCandidate(jump.dataset.jump); return; }
+      // オファー文コピー
+      const copyBtn = e.target.closest('[data-msg]');
+      if (copyBtn) { copyMsg(copyBtn.dataset.msg); return; }
     });
 
     document.addEventListener('input', e => {
