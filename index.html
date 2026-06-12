@@ -166,12 +166,13 @@
     dialog {
       width: min(440px, calc(100% - 22px)); border: 1px solid var(--line); border-radius: 24px;
       background: var(--panel); color: var(--text); padding: 0; box-shadow: var(--shadow);
+      max-height: 90dvh; overflow: hidden;
     }
     dialog::backdrop { background: rgba(0,0,0,.72); }
     .modal-head { padding: 17px 17px 11px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
     .modal-head strong { font-size: 17px; font-weight: 600; }
     .close { background: transparent; color: var(--muted); font-size: 24px; }
-    .form { padding: 14px 17px 17px; display: grid; gap: 10px; }
+    .form { padding: 14px 17px 17px; display: grid; gap: 10px; overflow-y: auto; max-height: calc(90dvh - 60px); }
     .field label { display: block; color: var(--muted); font-size: 12px; font-weight: 700; margin: 0 0 5px 2px; }
     .field input, .field select, .field textarea {
       width: 100%; color: var(--text); background: rgba(255,255,255,.055);
@@ -185,7 +186,7 @@
     }
     .danger-btn {
       color: #ffb4b4; background: rgba(255,107,107,.12); border: 1px solid rgba(255,107,107,.25);
-      border-radius: 15px; padding: 12px; font-weight: 800;
+      border-radius: 15px; padding: 12px; font-weight: 800; width: 100%;
     }
     .backup-box {
       background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 18px;
@@ -193,7 +194,11 @@
     }
     .backup-box strong { font-size: 14px; font-weight: 600; }
     .backup-box p { color: var(--muted); font-size: 12px; line-height: 1.55; margin: 0; }
-    .backup-actions { display: grid; gap: 9px; }
+    .backup-actions { display: flex; flex-direction: column; gap: 9px; }
+    .backup-actions .primary-btn,
+    .backup-actions .small-btn {
+      width: 100%; border-radius: 14px; padding: 12px; text-align: center; margin-top: 0;
+    }
     .file-input { display: none; }
 
     /* toast */
@@ -219,6 +224,15 @@
     .del-sheet p { margin: 0; font-size: 14px; color: var(--muted); }
     .del-sheet strong { font-size: 15px; font-weight: 600; }
     .del-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+
+    /* sort row */
+    .sort-row { display: flex; gap: 6px; margin: 0 0 8px; }
+    .sort-chip {
+      border-radius: 999px; padding: 6px 12px;
+      color: var(--muted); background: rgba(255,255,255,.06); border: 1px solid transparent;
+      font-size: 12px; font-weight: 700;
+    }
+    .sort-chip.active { color: white; background: rgba(139,92,246,.22); border-color: rgba(139,92,246,.5); }
 
     /* candidates-list wrapper */
     .cands-wrap {
@@ -262,10 +276,8 @@
     <form class="form" id="eventForm">
       <input type="hidden" name="editId">
       <div class="field"><label>イベント名</label><input name="name" required placeholder="例：KNOT Saturday"></div>
-      <div class="form-grid">
-        <div class="field"><label>日付</label><input name="date" type="date" required></div>
-        <div class="field"><label>時間</label><input name="time" placeholder="22:00-05:00"></div>
-      </div>
+      <div class="field"><label>日付</label><input name="date" type="date" required></div>
+      <div class="field"><label>時間</label><input name="time" placeholder="22:00-05:00"></div>
       <div class="field"><label>会場</label><input name="venue" placeholder="例：池袋 KNOT"></div>
       <div class="field"><label>ジャンル</label><input name="genre" placeholder="例：All Good Music"></div>
       <div class="form-grid">
@@ -345,6 +357,7 @@
 
     let currentTab = 'events';
     let filter = 'すべて';
+    let candSort = 'default'; // 'default' | 'offer' | 'ok' | 'ng'
     let pendingDelete = null;
 
     const sample = {
@@ -462,9 +475,24 @@
     }
 
     /* ── オファー候補 ── */
+    const STATUS_ORDER = { 'OK': 0, 'オファー済': 1, 'NG': 2, '候補': 3 };
     function renderCandidates() {
       const eventOptions = ['すべて', ...data.events.map(e => e.id)];
-      const candidates = data.candidates.filter(c => filter === 'すべて' || c.eventId === filter);
+      let candidates = data.candidates.filter(c => filter === 'すべて' || c.eventId === filter);
+      if (candSort !== 'default') {
+        const priority = candSort === 'ok' ? 'OK' : candSort === 'offer' ? 'オファー済' : 'NG';
+        candidates = [...candidates].sort((a, b) => {
+          const ap = a.status === priority ? -1 : STATUS_ORDER[a.status] ?? 9;
+          const bp = b.status === priority ? -1 : STATUS_ORDER[b.status] ?? 9;
+          return ap - bp;
+        });
+      } else {
+        candidates = [...candidates].sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9));
+      }
+      const sortBtns = ['default','ok','offer','ng'].map(s => {
+        const label = s === 'default' ? '並び順' : s === 'ok' ? 'OK順' : s === 'offer' ? '済順' : 'NG順';
+        return `<button class="sort-chip ${candSort===s?'active':''}" onclick="setCandSort('${s}')">${label}</button>`;
+      }).join('');
       $('#main').innerHTML = `
         <div class="section-head"><h2>オファー候補</h2><button class="small-btn" onclick="openCandidateDialog()">＋ 候補</button></div>
         <div class="chips">
@@ -473,11 +501,13 @@
             return `<button class="chip ${filter===v?'active':''}" onclick="setFilter('${v}')">${label}</button>`;
           }).join('')}
         </div>
+        <div class="sort-row">${sortBtns}</div>
         ${candidates.length
           ? `<div class="cands-wrap">${candidates.map(candidateCard).join('')}</div>`
           : `<div class="empty">候補がありません</div>`}`;
       $$('.c-memo-text').forEach(ta => autoResize(ta));
     }
+    function setCandSort(s) { candSort = s; render(); }
 
     function candidateCard(c) {
       const memoHtml = `<div class="c-memo-row"><textarea class="c-memo-text" rows="1" placeholder="メモ" data-memo-id="${escapeHtml(c.id)}">${escapeHtml(c.memo||'')}</textarea></div>`;
