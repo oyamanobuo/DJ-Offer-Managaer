@@ -1,6 +1,6 @@
 {
   "name": "DJオファー屋さん太郎",
-  "short_name": "オファー太郎",
+  "short_name": "DJオファー屋さん太郎",
   "start_url": "./dj_offer_manager_v3.html",
   "display": "standalone",
   "background_color": "#090b12",
