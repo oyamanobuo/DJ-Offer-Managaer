@@ -1,20 +1,12 @@
 {
   "name": "DJオファー屋さん太郎",
-  "short_name": "DJオファー屋さん太郎",
-  "start_url": "./dj_offer_manager_v3.html",
+  "short_name": "オファー太郎",
+  "start_url": "/DJ-Offer-Managaer/index.html",
   "display": "standalone",
   "background_color": "#090b12",
   "theme_color": "#090b12",
   "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
+    {"src": "/DJ-Offer-Managaer/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/DJ-Offer-Managaer/icon-512.png", "sizes": "512x512", "type": "image/png"}
   ]
 }
