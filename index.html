@@ -4,11 +4,22 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>DJオファー屋さん太郎</title>
+
+  <!-- ホーム画面アイコン / PWA設定 -->
+  <link rel="icon" href="icon-1024.png" type="image/png" />
+  <link rel="apple-touch-icon" href="icon-1024.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#090b12" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DJオファー屋さん太郎" />
   <style>
     :root {
       --bg: #090b12;
       --panel: #121622;
+      --panel-2: #181d2b;
       --card: #151a27;
+      --card-soft: #1b2131;
       --text: #f4f6fb;
       --muted: #9ca6bb;
       --line: rgba(255,255,255,.08);
@@ -18,10 +29,12 @@
       --orange: #ff9f43;
       --green: #41d18b;
       --red: #ff6b6b;
+      --gray: #737b8e;
       --shadow: 0 14px 40px rgba(0,0,0,.35);
       --radius: 20px;
       font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Hiragino Sans", "Yu Gothic", sans-serif;
     }
+
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -31,237 +44,388 @@
         var(--bg);
       color: var(--text);
       min-height: 100vh;
-      padding-bottom: 30px;
+      padding-bottom: calc(24px + env(safe-area-inset-bottom));
     }
+
     button, input, select, textarea { font: inherit; }
     button { border: 0; cursor: pointer; }
-    .app { width: min(480px, 100%); margin: 0 auto; padding: 14px 14px 0; }
 
-    /* topbar */
+    .app {
+      width: min(480px, 100%);
+      margin: 0 auto;
+      padding: 14px 14px 0;
+    }
+
     .topbar {
-      position: sticky; top: 0; z-index: 20;
+      position: sticky;
+      top: 0;
+      z-index: 20;
       margin: 0 -14px 10px;
       padding: calc(10px + env(safe-area-inset-top)) 14px 12px;
-      background: rgba(9,11,18,.82); backdrop-filter: blur(18px);
+      background: rgba(9,11,18,.82);
+      backdrop-filter: blur(18px);
       border-bottom: 1px solid var(--line);
     }
-    .topline { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    h1 { font-size: 20px; line-height: 1; margin: 0; letter-spacing: .02em; font-weight: 600; }
-    .subtitle { color: var(--muted); font-size: 12px; margin-top: 7px; }
-    .top-actions { display: flex; gap: 9px; align-items: center; }
-    .icon-btn {
-      width: 44px; height: 44px; border-radius: 14px; color: white;
-      background: rgba(255,255,255,.08); border: 1px solid var(--line); font-size: 22px; line-height: 1;
-    }
-    .add-main {
-      width: 44px; height: 44px; border-radius: 14px; color: white;
-      background: linear-gradient(135deg, var(--primary), var(--primary-2));
-      font-size: 30px; line-height: 1; box-shadow: 0 10px 24px rgba(139,92,246,.35);
-    }
-    .tabs {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
-      margin: 14px 0 4px;
-      background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 17px; padding: 5px;
-    }
-    .tab { color: var(--muted); background: transparent; border-radius: 13px; padding: 10px 4px; font-weight: 700; font-size: 13px; }
-    .tab.active { color: white; background: linear-gradient(135deg, rgba(139,92,246,.95), rgba(79,140,255,.86)); }
 
-    /* section */
-    .section-head { display: flex; align-items: end; justify-content: space-between; margin: 18px 2px 10px; }
-    .section-head h2 { font-size: 20px; margin: 0; font-weight: 600; }
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    h1 {
+      font-size: 20px;
+      line-height: 1;
+      margin: 0;
+      letter-spacing: .02em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 7px;
+    }
+
+    .top-actions { display: flex; gap: 9px; align-items: center; }
+
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      color: white;
+      background: rgba(255,255,255,.08);
+      border: 1px solid var(--line);
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .add-main {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      color: white;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      font-size: 30px;
+      line-height: 1;
+      box-shadow: 0 10px 24px rgba(139,92,246,.35);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 14px 0 4px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      padding: 5px;
+    }
+
+    .tab {
+      color: var(--muted);
+      background: transparent;
+      border-radius: 13px;
+      padding: 10px 4px;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .tab.active {
+      color: white;
+      background: linear-gradient(135deg, rgba(139,92,246,.95), rgba(79,140,255,.86));
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      margin: 18px 2px 10px;
+    }
+
+    .section-head h2 {
+      font-size: 22px;
+      margin: 0;
+    }
+
     .small-btn {
-      color: white; background: rgba(255,255,255,.08); border: 1px solid var(--line);
-      border-radius: 999px; padding: 8px 11px; font-size: 12px; font-weight: 700;
+      color: white;
+      background: rgba(255,255,255,.08);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 11px;
+      font-size: 12px;
+      font-weight: 700;
     }
-    .chips { display: flex; gap: 8px; overflow-x: auto; padding: 0 2px 8px; scrollbar-width: none; }
+
+    .chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 0 2px 8px;
+      scrollbar-width: none;
+    }
     .chips::-webkit-scrollbar { display: none; }
+
     .chip {
-      flex: 0 0 auto; border-radius: 999px; padding: 9px 14px;
-      color: var(--muted); background: rgba(255,255,255,.06); border: 1px solid transparent;
-      font-size: 13px; font-weight: 700;
+      flex: 0 0 auto;
+      border-radius: 999px;
+      padding: 9px 14px;
+      color: var(--muted);
+      background: rgba(255,255,255,.06);
+      border: 1px solid transparent;
+      font-size: 13px;
+      font-weight: 700;
     }
-    .chip.active { color: white; background: rgba(139,92,246,.22); border-color: rgba(139,92,246,.5); }
-    .list { display: grid; gap: 8px; }
+
+    .chip.active {
+      color: white;
+      background: rgba(139,92,246,.22);
+      border-color: rgba(139,92,246,.5);
+    }
+
+    .list { display: grid; gap: 10px; }
+
     .card {
       background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.025)), var(--card);
-      border: 1px solid var(--line); border-radius: var(--radius); padding: 15px; box-shadow: var(--shadow);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 15px;
+      box-shadow: var(--shadow);
     }
 
-    /* event card */
-    .event-card { display: grid; grid-template-columns: 66px 1fr auto; gap: 11px; align-items: center; }
-    .datebox {
-      text-align: center; border-radius: 14px;
-      background: rgba(255,255,255,.055); padding: 9px 4px; border: 1px solid var(--line);
+    .event-card {
+      display: grid;
+      grid-template-columns: 72px 1fr auto;
+      gap: 12px;
+      align-items: center;
     }
-    .datebox .md { font-size: 18px; font-weight: 700; }
-    .datebox .day { color: var(--blue); font-size: 12px; font-weight: 700; margin-top: 2px; }
-    .datebox .time { color: var(--muted); font-size: 10px; margin-top: 6px; }
-    .ev-title { font-size: 15px; font-weight: 500; margin: 0 0 5px; }
-    .meta { color: var(--muted); font-size: 12px; display: grid; gap: 4px; }
-    .meta-row { display: flex; gap: 6px; align-items: center; }
-    .right-info { text-align: right; display: grid; gap: 7px; justify-items: end; }
+
+    .datebox {
+      text-align: center;
+      border-radius: 16px;
+      background: rgba(255,255,255,.055);
+      padding: 10px 4px;
+      border: 1px solid var(--line);
+    }
+
+    .datebox .md { font-size: 20px; font-weight: 900; }
+    .datebox .day { color: var(--blue); font-size: 13px; font-weight: 800; margin-top: 2px; }
+    .datebox .time { color: var(--muted); font-size: 11px; margin-top: 7px; }
+
+    .title { font-size: 17px; font-weight: 400; margin: 0 0 7px; }
+    .meta { color: var(--muted); font-size: 13px; display: grid; gap: 5px; }
+    .meta-row { display: flex; gap: 7px; align-items: center; }
+
+    .right-info { text-align: right; display: grid; gap: 9px; justify-items: end; }
     .badge {
-      display: inline-flex; align-items: center; border-radius: 999px;
-      padding: 5px 9px; font-size: 11px; font-weight: 800; white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
     }
     .b-progress { color: #c9b8ff; background: rgba(139,92,246,.18); }
     .b-offer { color: #ffc27e; background: rgba(255,159,67,.14); }
     .b-ready { color: #c8ccd6; background: rgba(255,255,255,.09); }
     .b-done { color: #91efbd; background: rgba(65,209,139,.14); }
     .b-ng { color: #ffa1a1; background: rgba(255,107,107,.14); }
-    .count { font-weight: 600; font-size: 14px; color: var(--muted); }
-    .arrow { color: var(--muted); font-size: 20px; }
+    .count { font-weight: 900; font-size: 16px; }
+    .arrow { color: var(--muted); font-size: 24px; }
 
-    /* event card edit btn */
-    .ev-edit-area { display: flex; gap: 7px; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
-    .ev-edit-btn {
-      flex: 1; padding: 7px; border-radius: 10px; font-size: 12px; font-weight: 700;
-      background: rgba(255,255,255,.06); border: 1px solid var(--line); color: var(--muted);
-    }
-    .ev-del-btn {
-      padding: 7px 14px; border-radius: 10px; font-size: 12px; font-weight: 700;
-      background: rgba(255,107,107,.08); border: 1px solid rgba(255,107,107,.2); color: #ffb4b4;
+    .candidate-card, .reply-card {
+      display: grid;
+      gap: 11px;
     }
 
-    /* candidate card — flat, ultra compact */
-    .c-row {
-      display: flex; align-items: center; gap: 8px;
-      padding: 9px 12px;
+    .row-between {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
     }
-    .c-row:last-child { border-bottom: none; }
-    .c-name { font-size: 14px; font-weight: 500; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .c-btns { display: flex; gap: 4px; flex-shrink: 0; align-items: center; }
+
+    .dj-name { font-size: 19px; font-weight: 400; }
+    .event-mini { color: var(--muted); font-size: 13px; margin-top: 3px; }
+
+    .status-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 7px;
+    }
+
     .status-btn {
-      padding: 5px 9px; border-radius: 8px;
-      background: rgba(255,255,255,.06); color: var(--muted);
-      border: 1px solid var(--line); font-size: 11px; font-weight: 800;
+      padding: 10px 4px;
+      border-radius: 13px;
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+      border: 1px solid var(--line);
+      font-size: 12px;
+      font-weight: 900;
     }
-    .status-btn.active.ok    { color: var(--green);  border-color: rgba(65,209,139,.45);  background: rgba(65,209,139,.12); }
-    .status-btn.active.offer { color: var(--orange); border-color: rgba(255,159,67,.45);  background: rgba(255,159,67,.12); }
-    .status-btn.active.ng    { color: var(--red);    border-color: rgba(255,107,107,.45); background: rgba(255,107,107,.12); }
-    .c-icon-btn {
-      width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
-      background: transparent; border: none; color: var(--muted); font-size: 14px; line-height: 1;
-    }
-    .c-memo-row { padding: 0 12px 8px; }
-    .c-memo-text {
-      width: 100%; resize: none; overflow: hidden;
-      color: var(--muted); background: transparent; border: none; outline: none;
-      font-size: 11px; line-height: 1.5; padding: 0; min-height: 16px;
-    }
-    .c-memo-text::placeholder { color: rgba(156,166,187,.4); }
 
-    /* reply */
-    .reply-card { display: grid; gap: 11px; }
-    .row-between { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    .dj-name { font-size: 15px; font-weight: 500; }
-    .event-mini { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .status-btn.active.ok { color: var(--green); border-color: rgba(65,209,139,.45); background: rgba(65,209,139,.12); }
+    .status-btn.active.offer { color: var(--orange); border-color: rgba(255,159,67,.45); background: rgba(255,159,67,.12); }
+    .status-btn.active.wait { color: #91b7ff; border-color: rgba(79,140,255,.45); background: rgba(79,140,255,.12); }
+    .status-btn.active.ng { color: var(--red); border-color: rgba(255,107,107,.45); background: rgba(255,107,107,.12); }
+
+    .note {
+      width: 100%;
+      min-height: 44px;
+      resize: vertical;
+      color: var(--text);
+      background: rgba(255,255,255,.055);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px 12px;
+      outline: none;
+    }
 
     .empty {
-      color: var(--muted); text-align: center; padding: 34px 16px;
-      border: 1px dashed rgba(255,255,255,.15); border-radius: 20px; background: rgba(255,255,255,.03);
+      color: var(--muted);
+      text-align: center;
+      padding: 34px 16px;
+      border: 1px dashed rgba(255,255,255,.15);
+      border-radius: 20px;
+      background: rgba(255,255,255,.03);
     }
 
-    /* dialog */
+    .bottom-nav {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 0;
+      z-index: 30;
+      width: min(480px, 100%);
+      padding: 9px 12px calc(9px + env(safe-area-inset-bottom));
+      background: rgba(13,16,25,.92);
+      backdrop-filter: blur(18px);
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+    }
+
+    .nav-btn {
+      color: var(--muted);
+      background: transparent;
+      border-radius: 15px;
+      padding: 8px 3px 7px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .nav-btn span { display: block; font-size: 22px; margin-bottom: 3px; }
+    .nav-btn.active { color: white; background: rgba(139,92,246,.18); }
+
     dialog {
-      width: min(440px, calc(100% - 22px)); border: 1px solid var(--line); border-radius: 24px;
-      background: var(--panel); color: var(--text); padding: 0; box-shadow: var(--shadow);
-      max-height: 90dvh; overflow: hidden;
+      width: min(440px, calc(100% - 22px));
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--panel);
+      color: var(--text);
+      padding: 0;
+      box-shadow: var(--shadow);
     }
     dialog::backdrop { background: rgba(0,0,0,.72); }
-    .modal-head { padding: 17px 17px 11px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
-    .modal-head strong { font-size: 17px; font-weight: 600; }
+
+    .modal-head {
+      padding: 17px 17px 11px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-head strong { font-size: 18px; }
     .close { background: transparent; color: var(--muted); font-size: 24px; }
-    .form { padding: 14px 17px 17px; display: grid; gap: 10px; overflow-y: auto; max-height: calc(90dvh - 60px); }
-    .field label { display: block; color: var(--muted); font-size: 12px; font-weight: 700; margin: 0 0 5px 2px; }
-    .field input, .field select, .field textarea {
-      width: 100%; color: var(--text); background: rgba(255,255,255,.055);
-      border: 1px solid var(--line); border-radius: 14px; padding: 12px; outline: none;
+
+    .form { padding: 14px 17px 17px; display: grid; gap: 10px; }
+    .field label { display: block; color: var(--muted); font-size: 12px; font-weight: 800; margin: 0 0 5px 2px; }
+    .field input, .field select {
+      width: 100%;
+      color: var(--text);
+      background: rgba(255,255,255,.055);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      outline: none;
     }
-    .field textarea { resize: vertical; min-height: 60px; }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
     .primary-btn {
-      color: white; background: linear-gradient(135deg, var(--primary), var(--primary-2));
-      border-radius: 15px; padding: 13px; font-weight: 800; margin-top: 4px;
+      color: white;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      border-radius: 15px;
+      padding: 13px;
+      font-weight: 900;
+      margin-top: 4px;
     }
+
     .danger-btn {
-      color: #ffb4b4; background: rgba(255,107,107,.12); border: 1px solid rgba(255,107,107,.25);
-      border-radius: 15px; padding: 12px; font-weight: 800; width: 100%;
+      color: #ffb4b4;
+      background: rgba(255,107,107,.12);
+      border: 1px solid rgba(255,107,107,.25);
+      border-radius: 15px;
+      padding: 12px;
+      font-weight: 900;
     }
+
     .backup-box {
-      background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 18px;
-      padding: 13px; display: grid; gap: 9px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 13px;
+      display: grid;
+      gap: 9px;
     }
-    .backup-box strong { font-size: 14px; font-weight: 600; }
+    .backup-box strong { font-size: 15px; }
     .backup-box p { color: var(--muted); font-size: 12px; line-height: 1.55; margin: 0; }
-    .backup-actions { display: flex; flex-direction: column; gap: 9px; }
-    .backup-actions .primary-btn,
-    .backup-actions .small-btn {
-      width: 100%; border-radius: 14px; padding: 12px; text-align: center; margin-top: 0;
-    }
+    .backup-actions { display: grid; gap: 9px; }
     .file-input { display: none; }
 
-    /* toast */
-    #toast {
-      position: fixed; bottom: 30px; left: 50%;
-      transform: translateX(-50%) translateY(10px);
-      background: rgba(30,35,50,.97); border: 1px solid var(--line); border-radius: 14px;
-      padding: 11px 18px; font-size: 13px; font-weight: 700; color: var(--text);
-      opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; white-space: nowrap; z-index: 999;
-    }
-    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* delete sheet */
-    .del-overlay {
-      position: fixed; inset: 0; z-index: 100;
-      background: rgba(0,0,0,.72); display: flex; align-items: flex-end; justify-content: center;
-      padding-bottom: 12px;
-    }
-    .del-sheet {
-      width: min(440px, calc(100% - 24px)); background: var(--panel);
-      border: 1px solid var(--line); border-radius: 24px; padding: 20px; display: grid; gap: 10px;
-    }
-    .del-sheet p { margin: 0; font-size: 14px; color: var(--muted); }
-    .del-sheet strong { font-size: 15px; font-weight: 600; }
-    .del-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
 
-    /* offer message block */
-    .msg-block {
-      margin-top: 10px;
-      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.025)), var(--card);
-      border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow);
-      display: grid; gap: 10px;
+    /* 2026-06 修正版：スマホで候補欄を小さくシンプルに */
+    .topline { justify-content: space-between; position: static; min-height: 48px; }
+    .topline h1 { text-align: left; font-size: 20px; font-weight: 700; }
+    .top-actions { position: static; right: auto; top: auto; }
+    .candidate-card { padding: 0; overflow: hidden; gap: 0; }
+    .candidate-row {
+      display: grid;
+      grid-template-columns: 42px 1fr auto 22px;
+      gap: 10px;
+      align-items: center;
+      min-height: 62px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
     }
-    .msg-label { font-size: 12px; font-weight: 700; color: var(--muted); }
-    .msg-body {
-      font-size: 13px; line-height: 1.7; color: var(--text);
-      white-space: pre-wrap;
-      background: rgba(255,255,255,.04); border: 1px solid var(--line);
-      border-radius: 12px; padding: 12px;
+    .avatar {
+      width: 34px; height: 34px; border-radius: 999px;
+      display: grid; place-items: center;
+      background: rgba(255,255,255,.10);
+      color: #fff; font-weight: 900;
     }
-    .msg-copy-btn {
-      color: white; background: linear-gradient(135deg, var(--primary), var(--primary-2));
-      border-radius: 12px; padding: 11px; font-size: 13px; font-weight: 800;
-      box-shadow: 0 6px 18px rgba(139,92,246,.3);
-    }
+    .candidate-main { min-width: 0; }
+    .candidate-main .dj-name { font-size: 16px; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .candidate-main .event-mini { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .candidate-row .badge { min-width: 62px; justify-content: center; padding: 6px 10px; }
+    .candidate-detail { display:none; padding: 0 12px 12px 64px; }
+    .candidate-card.open .candidate-detail { display:grid; gap:8px; }
+    .status-actions { grid-template-columns: repeat(3, 1fr); }
+    .candidate-card .danger-btn { padding: 9px; font-size: 12px; }
+    .note { min-height: 38px; font-size: 13px; }
+    .compact-list { gap: 0; overflow: hidden; padding: 0; }
+    .compact-list .candidate-card { border-radius: 0; border-left: 0; border-right: 0; border-top: 0; box-shadow:none; background: transparent; }
+    .compact-list .candidate-card:first-child { border-top-left-radius: var(--radius); border-top-right-radius: var(--radius); }
+    .compact-list .candidate-card:last-child { border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius); border-bottom:0; }
 
-    /* sort row */
-    .sort-row { display: flex; gap: 6px; margin: 0 0 8px; }
-    .sort-chip {
-      border-radius: 999px; padding: 6px 12px;
-      color: var(--muted); background: rgba(255,255,255,.06); border: 1px solid transparent;
-      font-size: 12px; font-weight: 700;
-    }
-    .sort-chip.active { color: white; background: rgba(139,92,246,.22); border-color: rgba(139,92,246,.5); }
-
-    /* candidates-list wrapper */
-    .cands-wrap {
-      display: grid; gap: 8px;
-    }
-    .cand-item {
-      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.025)), var(--card);
-      border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow);
-      overflow: hidden;
+    @media (max-width: 390px) {
+      .event-card { grid-template-columns: 64px 1fr auto; gap: 9px; padding: 13px; }
+      .datebox .md { font-size: 18px; }
+      .title { font-size: 16px; }
+      .meta { font-size: 12px; }
+      .badge { font-size: 11px; padding: 5px 8px; }
     }
   </style>
 </head>
@@ -271,7 +435,7 @@
       <div class="topline">
         <div>
           <h1>DJオファー屋さん太郎</h1>
-          <div class="subtitle">イベント・候補・返答だけのシンプル管理</div>
+          
         </div>
         <div class="top-actions">
           <button class="icon-btn" id="settingsBtn" aria-label="設定">⚙︎</button>
@@ -284,55 +448,50 @@
         <button class="tab" data-tab="replies">返答状況</button>
       </div>
     </header>
+
     <main id="main"></main>
   </div>
 
-  <!-- イベント追加/編集 -->
+
   <dialog id="eventDialog">
     <div class="modal-head">
-      <strong id="eventDialogTitle">イベントを追加</strong>
+      <strong>イベントを追加</strong>
       <button class="close" data-close>×</button>
     </div>
     <form class="form" id="eventForm">
-      <input type="hidden" name="editId">
       <div class="field"><label>イベント名</label><input name="name" required placeholder="例：KNOT Saturday"></div>
-      <div class="field"><label>日付</label><input name="date" type="date" required></div>
-      <div class="field"><label>時間</label><input name="time" placeholder="22:00-05:00"></div>
+      <div class="form-grid">
+        <div class="field"><label>日付</label><input name="date" type="date" required></div>
+        <div class="field"><label>時間</label><input name="time" placeholder="22:00-05:00"></div>
+      </div>
       <div class="field"><label>会場</label><input name="venue" placeholder="例：池袋 KNOT"></div>
       <div class="field"><label>ジャンル</label><input name="genre" placeholder="例：All Good Music"></div>
       <div class="form-grid">
         <div class="field"><label>必要人数</label><input name="slots" type="number" min="1" value="5"></div>
-        <div class="field"><label>状態</label>
-          <select name="status">
-            <option>準備中</option><option>オファー中</option><option>進行中</option><option>終了</option>
-          </select>
-        </div>
+        <div class="field"><label>状態</label><select name="status"><option>準備中</option><option>オファー中</option><option>進行中</option><option>終了</option></select></div>
       </div>
-      <button class="primary-btn" id="eventSubmitBtn">追加する</button>
+      <button class="primary-btn">追加する</button>
     </form>
   </dialog>
 
-  <!-- DJ候補 追加/編集 -->
   <dialog id="candidateDialog">
     <div class="modal-head">
-      <strong id="candidateDialogTitle">候補を追加</strong>
+      <strong>候補を追加</strong>
       <button class="close" data-close>×</button>
     </div>
     <form class="form" id="candidateForm">
-      <input type="hidden" name="editId">
       <div class="field"><label>DJ名</label><input name="dj" required placeholder="例：PINO"></div>
       <div class="field"><label>イベント</label><select name="eventId" id="candidateEventSelect"></select></div>
-      <div class="field"><label>状態</label>
-        <select name="status">
-          <option>候補</option><option>オファー済</option><option>OK</option><option>NG</option>
-        </select>
+      <div class="form-grid">
+        <div class="field"><label>状態</label><select name="status"><option>候補</option><option>オファー済</option><option>OK</option><option>保留</option><option>NG</option></select></div>
+        <input type="hidden" name="slot" value="">
       </div>
-      <div class="field"><label>メモ</label><textarea name="memo" placeholder="例：22時台希望 / 連絡はInstagram"></textarea></div>
-      <button class="primary-btn" id="candidateSubmitBtn">追加する</button>
+      <div class="field"><label>メモ</label><input name="memo" placeholder="例：22時台希望 / 連絡はInstagram"></div>
+      <button class="primary-btn">追加する</button>
     </form>
   </dialog>
 
-  <!-- 設定 -->
+
   <dialog id="settingsDialog">
     <div class="modal-head">
       <strong>設定・バックアップ</strong>
@@ -351,49 +510,34 @@
       <div class="backup-box">
         <strong>データ削除</strong>
         <p>この端末のブラウザ内に保存されているデータだけを削除します。バックアップがない場合は元に戻せません。</p>
-        <button class="danger-btn" type="button" onclick="askResetAll()">全データ削除</button>
+        <button class="danger-btn" type="button" onclick="resetAllData()">全データ削除</button>
       </div>
     </div>
   </dialog>
 
-  <!-- 削除確認シート -->
-  <div id="delOverlay" class="del-overlay" style="display:none;">
-    <div class="del-sheet">
-      <strong id="delTitle">削除しますか？</strong>
-      <p id="delDesc"></p>
-      <div class="del-actions">
-        <button class="small-btn" onclick="cancelDelete()">キャンセル</button>
-        <button class="danger-btn" onclick="confirmDelete()">削除する</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="toast"></div>
-
   <script>
-    const STORAGE_KEY = 'dj-offer-manager-dark-v1';
+    const STORAGE_KEY = 'dj-offer-manager-dark-v2';
+    const uid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
     const $ = (q, root = document) => root.querySelector(q);
     const $$ = (q, root = document) => [...root.querySelectorAll(q)];
 
     let currentTab = 'events';
     let filter = 'すべて';
-    let candSort = 'default'; // 'default' | 'offer' | 'ok' | 'ng'
-    let pendingDelete = null;
 
     const sample = {
       events: [
-        { id: crypto.randomUUID(), name: 'KNOT Saturday', date: '2026-06-15', time: '22:00-05:00', venue: '池袋 KNOT', genre: 'All Good Music', slots: 6, status: '進行中' },
-        { id: crypto.randomUUID(), name: 'Groove Night', date: '2026-06-22', time: '22:00-05:00', venue: '下北沢 ERA', genre: 'House / Techno', slots: 5, status: 'オファー中' },
-        { id: crypto.randomUUID(), name: 'Summer Vibes', date: '2026-07-06', time: '22:00-05:00', venue: '渋谷 CONTACT', genre: 'Hip Hop / R&B', slots: 6, status: '準備中' }
+        { id: uid(), name: 'KNOT Saturday', date: '2026-06-15', time: '22:00-05:00', venue: '池袋 KNOT', genre: 'All Good Music', slots: 6, status: '進行中' },
+        { id: uid(), name: 'Groove Night', date: '2026-06-22', time: '22:00-05:00', venue: '下北沢 ERA', genre: 'House / Techno', slots: 5, status: 'オファー中' },
+        { id: uid(), name: 'Summer Vibes', date: '2026-07-06', time: '22:00-05:00', venue: '渋谷 CONTACT', genre: 'Hip Hop / R&B', slots: 6, status: '準備中' }
       ],
       candidates: []
     };
     sample.candidates = [
-      { id: crypto.randomUUID(), eventId: sample.events[0].id, dj: 'PINO', status: 'OK', memo: '22:00予定。フライヤー送付済み' },
-      { id: crypto.randomUUID(), eventId: sample.events[0].id, dj: 'KAZUKI', status: 'オファー済', memo: '返答待ち中' },
-      { id: crypto.randomUUID(), eventId: sample.events[0].id, dj: 'YUTO', status: 'OK', memo: '' },
-      { id: crypto.randomUUID(), eventId: sample.events[1].id, dj: 'MARI', status: 'オファー済', memo: '交通費確認' },
-      { id: crypto.randomUUID(), eventId: sample.events[1].id, dj: 'TAKA', status: 'NG', memo: 'この日は別件あり' }
+      { id: uid(), eventId: sample.events[0].id, dj: 'PINO', slot: '', status: 'OK', memo: '22:00予定。フライヤー送付済み' },
+      { id: uid(), eventId: sample.events[0].id, dj: 'KAZUKI', slot: '', status: 'オファー済', memo: '返答待ち' },
+      { id: uid(), eventId: sample.events[0].id, dj: 'YUTO', slot: '', status: 'OK', memo: '' },
+      { id: uid(), eventId: sample.events[1].id, dj: 'MARI', slot: '', status: '保留', memo: '交通費確認' },
+      { id: uid(), eventId: sample.events[1].id, dj: 'TAKA', slot: '', status: 'NG', memo: 'この日は別件あり' }
     ];
 
     let data = load();
@@ -401,118 +545,89 @@
     function load() {
       try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        if (saved && Array.isArray(saved.events) && Array.isArray(saved.candidates)) return saved;
-      } catch {}
-      return sample;
+        return saved && saved.events ? saved : sample;
+      } catch { return sample; }
     }
+
     function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
     function fmtDate(dateStr) {
       const d = new Date(dateStr + 'T00:00:00');
-      if (Number.isNaN(d.getTime())) return { md: '--.--', day: '' };
+      if (Number.isNaN(d.getTime())) return { md: '--.--', day: '', full: '' };
       const days = ['日','月','火','水','木','金','土'];
       return {
         md: `${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`,
-        day: `(${days[d.getDay()]})`
+        day: `(${days[d.getDay()]})`,
+        full: `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`
       };
     }
+
     function badgeClass(status) {
       if (status === '進行中') return 'b-progress';
       if (status === 'オファー中' || status === 'オファー済') return 'b-offer';
       if (status === '終了' || status === 'OK') return 'b-done';
       if (status === 'NG') return 'b-ng';
+      if (status === '保留') return 'b-offer';
+      if (status === '未読') return 'b-ready';
       return 'b-ready';
     }
+
     function getEvent(id) { return data.events.find(e => e.id === id); }
     function okCount(eventId) { return data.candidates.filter(c => c.eventId === eventId && c.status === 'OK').length; }
-    function escapeHtml(str) {
-      return String(str).replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s]));
-    }
-
-    let _toastTimer;
-    function toast(msg) {
-      const el = $('#toast');
-      el.textContent = msg;
-      el.classList.add('show');
-      clearTimeout(_toastTimer);
-      _toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
-    }
 
     function render() {
       $$('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === currentTab));
       if (currentTab === 'events') renderEvents();
-      else if (currentTab === 'candidates') renderCandidates();
-      else if (currentTab === 'replies') renderReplies();
-      $$('.c-memo-text').forEach(ta => autoResize(ta));
+      if (currentTab === 'candidates') renderCandidates();
+      if (currentTab === 'replies') renderReplies();
     }
 
-    /* ── イベント一覧 ── */
     function renderEvents() {
       const filters = ['すべて','準備中','オファー中','進行中','終了'];
       const events = data.events
         .slice()
         .sort((a,b) => a.date.localeCompare(b.date))
-        .filter(e => filter === 'すべて' ? e.status !== '終了' : e.status === filter);
+        .filter(e => filter === 'すべて' || e.status === filter);
 
       $('#main').innerHTML = `
         <div class="section-head"><h2>イベント一覧</h2><button class="small-btn" onclick="openEventDialog()">＋ イベント</button></div>
         <div class="chips">${filters.map(f => `<button class="chip ${filter===f?'active':''}" onclick="setFilter('${f}')">${f}</button>`).join('')}</div>
         <div class="list">
-          ${events.length
-            ? events.map(eventCard).join('')
-            : `<div class="empty">${filter==='すべて'?'イベントがありません':'イベントがありません'}</div>`}
+          ${events.length ? events.map(eventCard).join('') : `<div class="empty">イベントがありません</div>`}
         </div>`;
     }
 
     function eventCard(e) {
       const d = fmtDate(e.date);
       return `
-        <article class="card" style="padding:13px; cursor:pointer;" data-ev-cands="${escapeHtml(e.id)}">
-          <div class="event-card">
-            <div class="datebox">
-              <div class="md">${d.md}</div>
-              <div class="day">${d.day}</div>
-              <div class="time">${escapeHtml(e.time||'')}</div>
-            </div>
-            <div>
-              <p class="ev-title">${escapeHtml(e.name)}</p>
-              <div class="meta">
-                <div class="meta-row">📍 ${escapeHtml(e.venue||'会場未定')}</div>
-                <div class="meta-row">♪ ${escapeHtml(e.genre||'ジャンル未定')}</div>
-              </div>
-            </div>
-            <div class="right-info">
-              <span class="badge ${badgeClass(e.status)}">${escapeHtml(e.status)}</span>
-              <span class="count">${okCount(e.id)}/${e.slots||0}人</span>
-              <span class="arrow">›</span>
+        <article class="card event-card" onclick="showEventDetail('${e.id}')">
+          <div class="datebox"><div class="md">${d.md}</div><div class="day">${d.day}</div><div class="time">${e.time || ''}</div></div>
+          <div>
+            <p class="title">${escapeHtml(e.name)}</p>
+            <div class="meta">
+              <div class="meta-row">📍 ${escapeHtml(e.venue || '会場未定')}</div>
+              <div class="meta-row">♪ ${escapeHtml(e.genre || 'ジャンル未定')}</div>
             </div>
           </div>
-          <div class="ev-edit-area">
-            <button class="ev-edit-btn" data-ev-edit="${escapeHtml(e.id)}">編集</button>
-            <button class="ev-del-btn" data-ev-del="${escapeHtml(e.id)}">削除</button>
+          <div class="right-info">
+            <span class="badge ${badgeClass(e.status)}">${e.status}</span>
+            <span class="count">${okCount(e.id)}/${e.slots || 0}人</span>
+            <span class="arrow">›</span>
           </div>
         </article>`;
     }
 
-    /* ── オファー候補 ── */
-    const STATUS_ORDER = { 'OK': 0, 'オファー済': 1, 'NG': 2, '候補': 3 };
+    function showEventDetail(id) {
+      const e = getEvent(id);
+      if (!e) return;
+      currentTab = 'candidates';
+      filter = e.id;
+      render();
+    }
+
     function renderCandidates() {
       const eventOptions = ['すべて', ...data.events.map(e => e.id)];
-      let candidates = data.candidates.filter(c => filter === 'すべて' || c.eventId === filter);
-      if (candSort !== 'default') {
-        const priority = candSort === 'ok' ? 'OK' : candSort === 'offer' ? 'オファー済' : 'NG';
-        candidates = [...candidates].sort((a, b) => {
-          const ap = a.status === priority ? -1 : STATUS_ORDER[a.status] ?? 9;
-          const bp = b.status === priority ? -1 : STATUS_ORDER[b.status] ?? 9;
-          return ap - bp;
-        });
-      } else {
-        candidates = [...candidates].sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9));
-      }
-      const sortBtns = ['default','ok','offer','ng'].map(s => {
-        const label = s === 'default' ? '並び順' : s === 'ok' ? 'OK順' : s === 'offer' ? '済順' : 'NG順';
-        return `<button class="sort-chip ${candSort===s?'active':''}" onclick="setCandSort('${s}')">${label}</button>`;
-      }).join('');
+      const candidates = data.candidates.filter(c => filter === 'すべて' || c.eventId === filter);
       $('#main').innerHTML = `
         <div class="section-head"><h2>オファー候補</h2><button class="small-btn" onclick="openCandidateDialog()">＋ 候補</button></div>
         <div class="chips">
@@ -521,145 +636,83 @@
             return `<button class="chip ${filter===v?'active':''}" onclick="setFilter('${v}')">${label}</button>`;
           }).join('')}
         </div>
-        <div class="sort-row">${sortBtns}</div>
-        ${candidates.length
-          ? `<div class="cands-wrap">${candidates.map(candidateCard).join('')}</div>`
-          : `<div class="empty">候補がありません</div>`}
-        ${filter !== 'すべて' ? offerMsgBlock(filter) : ''}`;
-      $$('.c-memo-text').forEach(ta => autoResize(ta));
-    }
-    function setCandSort(s) { candSort = s; render(); }
-
-    function offerMsgBlock(eventId) {
-      const ev = getEvent(eventId);
-      if (!ev) return '';
-      const d = new Date(ev.date + 'T00:00:00');
-      const dateStr = Number.isNaN(d.getTime()) ? ev.date
-        : `${d.getMonth()+1}月${d.getDate()}日`;
-      const msg = `お疲れ様です\n${dateStr} ${ev.name}、DJお願いしたいのですがご都合いかがでしょうか？\nご検討よろしくお願いします🙏`;
-      return `
-        <div class="msg-block">
-          <div class="msg-label">📋 オファー文</div>
-          <div class="msg-body">${escapeHtml(msg)}</div>
-          <button class="msg-copy-btn" data-msg="${escapeHtml(msg)}">コピー</button>
+        <div class="list compact-list">
+          ${candidates.length ? candidates.map(candidateCard).join('') : `<div class="empty">候補がありません</div>`}
         </div>`;
-    }
-
-    function copyMsg(msg) {
-      navigator.clipboard.writeText(msg).then(() => toast('コピーしました')).catch(() => {
-        // fallback
-        const ta = document.createElement('textarea');
-        ta.value = msg; ta.style.position = 'fixed'; ta.style.opacity = '0';
-        document.body.appendChild(ta); ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        toast('コピーしました');
-      });
     }
 
     function candidateCard(c) {
-      const memoHtml = `<div class="c-memo-row"><textarea class="c-memo-text" rows="1" placeholder="メモ" data-memo-id="${escapeHtml(c.id)}">${escapeHtml(c.memo||'')}</textarea></div>`;
+      const e = getEvent(c.eventId);
+      const initial = escapeHtml((c.dj || '?').trim().charAt(0).toUpperCase());
       return `
-        <div class="cand-item">
-          <div class="c-row">
-            <div class="c-name">${escapeHtml(c.dj)}</div>
-            <div class="c-btns">
-              ${statusBtn(c,'オファー済','offer','済')}
-              ${statusBtn(c,'OK','ok','OK')}
-              ${statusBtn(c,'NG','ng','NG')}
-              <button class="c-icon-btn" data-cand-edit="${escapeHtml(c.id)}" title="編集">✏️</button>
-              <button class="c-icon-btn" data-cand-del="${escapeHtml(c.id)}" title="削除">🗑</button>
+        <article class="card candidate-card" id="cand-${c.id}">
+          <div class="candidate-row" onclick="toggleCandidate('${c.id}')">
+            <div class="avatar">${initial}</div>
+            <div class="candidate-main">
+              <div class="dj-name">${escapeHtml(c.dj)}</div>
+              <div class="event-mini">${escapeHtml(e?.name || '')}</div>
             </div>
+            <span class="badge ${badgeClass(c.status)}">${c.status}</span>
+            <span class="arrow">›</span>
           </div>
-          ${c.memo ? memoHtml : ''}
-        </div>`;
+          <div class="candidate-detail">
+            <div class="event-mini">${escapeHtml(e?.name || 'イベント未設定')}${c.memo ? ' / ' + escapeHtml(c.memo) : ''}</div>
+            <div class="status-actions">
+              ${statusButton(c, 'オファー済', 'offer')}
+              ${statusButton(c, 'OK', 'ok')}
+              ${statusButton(c, 'NG', 'ng')}
+            </div>
+            <textarea class="note" placeholder="メモ" onchange="updateMemo('${c.id}', this.value)">${escapeHtml(c.memo || '')}</textarea>
+            <button class="danger-btn" onclick="deleteCandidate('${c.id}')">削除</button>
+          </div>
+        </article>`;
     }
 
-    function statusBtn(c, status, cls, label) {
-      return `<button class="status-btn ${c.status===status?'active':''} ${cls}" data-sid="${escapeHtml(c.id)}" data-sval="${escapeHtml(status)}">${label}</button>`;
+    function statusButton(c, status, cls) {
+      return `<button class="status-btn ${c.status===status?'active':''} ${cls}" onclick="setCandidateStatus('${c.id}','${status}')">${status.replace('オファー済','済')}</button>`;
     }
 
-    /* ── 返答状況 ── */
     function renderReplies() {
-      const groups = ['OK','オファー済','NG','候補'];
+      const groups = ['OK','オファー済','保留','NG','候補'];
       $('#main').innerHTML = `
         <div class="section-head"><h2>返答状況</h2><button class="small-btn" onclick="openCandidateDialog()">＋ 候補</button></div>
-        <div class="list">${groups.map(replyGroup).join('')}</div>`;
+        <div class="list">
+          ${groups.map(status => replyGroup(status)).join('')}
+        </div>`;
     }
 
     function replyGroup(status) {
       const items = data.candidates.filter(c => c.status === status);
       return `
         <section class="card reply-card">
-          <div class="row-between"><span style="font-size:14px;font-weight:600">${escapeHtml(status)}</span><span class="badge ${badgeClass(status)}">${items.length}人</span></div>
+          <div class="row-between"><strong>${status}</strong><span class="badge ${badgeClass(status)}">${items.length}人</span></div>
           ${items.length ? items.map(c => {
             const e = getEvent(c.eventId);
-            return `<div class="row-between" style="border-top:1px solid var(--line);padding-top:9px;">
-              <div>
-                <div class="dj-name">${escapeHtml(c.dj)}</div>
-                <div class="event-mini">${escapeHtml(e?.name||'')}${c.memo?' · '+escapeHtml(c.memo):''}</div>
-              </div>
-              <button class="small-btn" data-jump="${escapeHtml(c.eventId)}">見る</button>
+            return `<div class="row-between" style="border-top:1px solid var(--line); padding-top:10px;">
+              <div><div class="dj-name" style="font-size:16px;">${escapeHtml(c.dj)}</div><div class="event-mini">${escapeHtml(e?.name || '')}${c.memo ? ' / ' + escapeHtml(c.memo) : ''}</div></div>
+              <button class="small-btn" onclick="jumpCandidate('${c.eventId}')">見る</button>
             </div>`;
-          }).join('') : `<div class="event-mini" style="color:var(--muted)">該当なし</div>`}
+          }).join('') : `<div class="event-mini">該当なし</div>`}
         </section>`;
     }
 
-    /* ── イベントデリゲーション ── */
-    document.addEventListener('click', e => {
-      // イベントカードタップ → 候補へ（編集・削除ボタンは除く）
-      const evCard = e.target.closest('[data-ev-cands]');
-      if (evCard && !e.target.closest('[data-ev-edit]') && !e.target.closest('[data-ev-del]')) {
-        showEventDetail(evCard.dataset.evCands); return;
-      }
-      // イベント編集
-      const evEdit = e.target.closest('[data-ev-edit]');
-      if (evEdit) { openEventDialog(evEdit.dataset.evEdit); return; }
-      // イベント削除
-      const evDel = e.target.closest('[data-ev-del]');
-      if (evDel) { askDelete('event', evDel.dataset.evDel); return; }
-      // ステータスボタン
-      const sb = e.target.closest('[data-sid]');
-      if (sb) { setCandidateStatus(sb.dataset.sid, sb.dataset.sval); return; }
-      // 候補編集
-      const editBtn = e.target.closest('[data-cand-edit]');
-      if (editBtn) { openCandidateDialog(editBtn.dataset.candEdit); return; }
-      // 候補削除
-      const delBtn = e.target.closest('[data-cand-del]');
-      if (delBtn) { askDelete('candidate', delBtn.dataset.candDel); return; }
-      // 返答「見る」
-      const jump = e.target.closest('[data-jump]');
-      if (jump) { jumpCandidate(jump.dataset.jump); return; }
-      // オファー文コピー
-      const copyBtn = e.target.closest('[data-msg]');
-      if (copyBtn) { copyMsg(copyBtn.dataset.msg); return; }
-    });
+    function toggleCandidate(id) {
+      const el = document.getElementById('cand-' + id);
+      if (el) el.classList.toggle('open');
+    }
 
-    document.addEventListener('input', e => {
-      const ta = e.target.closest('[data-memo-id]');
-      if (!ta) return;
-      autoResize(ta);
-      updateMemo(ta.dataset.memoId, ta.value);
-    });
-
-    function autoResize(ta) {
-      ta.style.height = 'auto';
-      ta.style.height = ta.scrollHeight + 'px';
+    function jumpCandidate(eventId) {
+      currentTab = 'candidates';
+      filter = eventId || 'すべて';
+      render();
     }
 
     function setFilter(v) { filter = v; render(); }
 
-    function showEventDetail(id) {
-      if (!getEvent(id)) return;
-      currentTab = 'candidates';
-      filter = id;
-      render();
-    }
-
     function setCandidateStatus(id, status) {
       const c = data.candidates.find(x => x.id === id);
       if (!c) return;
-      c.status = (c.status === status) ? '候補' : status;
+      c.status = status;
       save(); render();
     }
 
@@ -670,160 +723,63 @@
       save();
     }
 
-    function jumpCandidate(eventId) {
-      currentTab = 'candidates';
-      filter = eventId || 'すべて';
+    function deleteCandidate(id) {
+      if (!confirm('この候補を削除しますか？')) return;
+      data.candidates = data.candidates.filter(c => c.id !== id);
+      save(); render();
+    }
+
+    function openEventDialog() { $('#eventDialog').showModal(); }
+    function openCandidateDialog() {
+      const select = $('#candidateEventSelect');
+      select.innerHTML = data.events.map(e => `<option value="${e.id}">${escapeHtml(e.name)}</option>`).join('');
+      if (filter !== 'すべて' && getEvent(filter)) select.value = filter;
+      $('#candidateDialog').showModal();
+    }
+
+    $('#addBtn').addEventListener('click', () => currentTab === 'events' ? openEventDialog() : openCandidateDialog());
+    $('#settingsBtn').addEventListener('click', () => $('#settingsDialog').showModal());
+
+    $$('.tab').forEach(b => b.addEventListener('click', () => {
+      currentTab = b.dataset.tab;
+      filter = 'すべて';
       render();
-    }
+    }));
 
-    /* ── 削除確認シート ── */
-    function askDelete(type, id) {
-      pendingDelete = { type, id };
-      if (type === 'candidate') {
-        const c = data.candidates.find(x => x.id === id);
-        $('#delTitle').textContent = `「${c?.dj || 'DJ'}」を削除しますか？`;
-        $('#delDesc').textContent = '削除後は元に戻せません。';
-      } else if (type === 'event') {
-        const ev = getEvent(id);
-        $('#delTitle').textContent = `「${ev?.name || 'イベント'}」を削除しますか？`;
-        $('#delDesc').textContent = 'このイベントに紐づく候補も一緒に削除されます。';
-      }
-      $('#delOverlay').style.display = 'flex';
-    }
-    function askResetAll() {
-      pendingDelete = { type: '__reset__', id: null };
-      $('#delTitle').textContent = '全データを削除しますか？';
-      $('#delDesc').textContent = 'バックアップがない場合は元に戻せません。';
-      $('#delOverlay').style.display = 'flex';
-    }
-    function cancelDelete() { pendingDelete = null; $('#delOverlay').style.display = 'none'; }
-    function confirmDelete() {
-      if (!pendingDelete) return;
-      const { type, id } = pendingDelete;
-      if (type === 'candidate') {
-        data.candidates = data.candidates.filter(c => c.id !== id);
-        toast('削除しました');
-      } else if (type === 'event') {
-        data.candidates = data.candidates.filter(c => c.eventId !== id);
-        data.events = data.events.filter(e => e.id !== id);
-        if (filter === id) filter = 'すべて';
-        toast('削除しました');
-      } else if (type === '__reset__') {
-        data = { events: [], candidates: [] };
-        currentTab = 'events'; filter = 'すべて';
-        $('#settingsDialog').close();
-        toast('全データを削除しました');
-      }
-      save(); render(); cancelDelete();
-    }
-
-    /* ── イベントフォーム ── */
-    function openEventDialog(editId) {
-      const form = $('#eventForm');
-      form.reset();
-      form.editId.value = editId || '';
-      if (editId) {
-        const ev = getEvent(editId);
-        if (!ev) return;
-        form.name.value = ev.name;
-        form.date.value = ev.date;
-        form.time.value = ev.time || '';
-        form.venue.value = ev.venue || '';
-        form.genre.value = ev.genre || '';
-        form.slots.value = ev.slots || 1;
-        form.status.value = ev.status;
-        $('#eventDialogTitle').textContent = 'イベントを編集';
-        $('#eventSubmitBtn').textContent = '保存する';
-      } else {
-        $('#eventDialogTitle').textContent = 'イベントを追加';
-        $('#eventSubmitBtn').textContent = '追加する';
-      }
-      $('#eventDialog').showModal();
-    }
+    $$('[data-close]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
 
     $('#eventForm').addEventListener('submit', e => {
       e.preventDefault();
       const fd = new FormData(e.currentTarget);
-      const editId = fd.get('editId');
-      if (editId) {
-        const ev = getEvent(editId);
-        if (ev) {
-          ev.name = fd.get('name').trim();
-          ev.date = fd.get('date');
-          ev.time = fd.get('time').trim();
-          ev.venue = fd.get('venue').trim();
-          ev.genre = fd.get('genre').trim();
-          ev.slots = Number(fd.get('slots') || 1);
-          ev.status = fd.get('status');
-          toast('イベントを保存しました');
-        }
-      } else {
-        data.events.push({
-          id: crypto.randomUUID(),
-          name: fd.get('name').trim(),
-          date: fd.get('date'),
-          time: fd.get('time').trim(),
-          venue: fd.get('venue').trim(),
-          genre: fd.get('genre').trim(),
-          slots: Number(fd.get('slots') || 1),
-          status: fd.get('status')
-        });
-        toast('イベントを追加しました');
-      }
+      data.events.push({
+        id: uid(),
+        name: fd.get('name').trim(),
+        date: fd.get('date'),
+        time: fd.get('time').trim(),
+        venue: fd.get('venue').trim(),
+        genre: fd.get('genre').trim(),
+        slots: Number(fd.get('slots') || 1),
+        status: fd.get('status')
+      });
       save();
       e.currentTarget.reset();
       $('#eventDialog').close();
-      filter = 'すべて'; currentTab = 'events';
+      filter = 'すべて';
+      currentTab = 'events';
       render();
     });
-
-    /* ── 候補フォーム ── */
-    function openCandidateDialog(editId) {
-      const form = $('#candidateForm');
-      form.reset();
-      form.editId.value = editId || '';
-      const select = $('#candidateEventSelect');
-      select.innerHTML = data.events.map(e => `<option value="${escapeHtml(e.id)}">${escapeHtml(e.name)}</option>`).join('');
-      if (editId) {
-        const c = data.candidates.find(x => x.id === editId);
-        if (!c) return;
-        form.dj.value = c.dj;
-        select.value = c.eventId;
-        form.status.value = c.status;
-        form.memo.value = c.memo || '';
-        $('#candidateDialogTitle').textContent = '候補を編集';
-        $('#candidateSubmitBtn').textContent = '保存する';
-      } else {
-        if (filter !== 'すべて' && getEvent(filter)) select.value = filter;
-        $('#candidateDialogTitle').textContent = '候補を追加';
-        $('#candidateSubmitBtn').textContent = '追加する';
-      }
-      $('#candidateDialog').showModal();
-    }
 
     $('#candidateForm').addEventListener('submit', e => {
       e.preventDefault();
       const fd = new FormData(e.currentTarget);
-      const editId = fd.get('editId');
-      const djName = fd.get('dj').trim();
-      const eventId = fd.get('eventId');
-      if (editId) {
-        const c = data.candidates.find(x => x.id === editId);
-        if (c) {
-          c.dj = djName; c.eventId = eventId;
-          c.status = fd.get('status');
-          c.memo = fd.get('memo').trim();
-          toast('候補を保存しました');
-        }
-      } else {
-        const dup = data.candidates.find(c => c.eventId === eventId && c.dj.toLowerCase() === djName.toLowerCase());
-        if (dup) { alert(`「${djName}」はこのイベントにすでに追加されています。`); return; }
-        data.candidates.push({
-          id: crypto.randomUUID(), eventId, dj: djName,
-          status: fd.get('status'), memo: fd.get('memo').trim()
-        });
-        toast('候補を追加しました');
-      }
+      data.candidates.push({
+        id: uid(),
+        eventId: fd.get('eventId'),
+        dj: fd.get('dj').trim(),
+        slot: fd.get('slot').trim(),
+        status: fd.get('status'),
+        memo: fd.get('memo').trim()
+      });
       save();
       e.currentTarget.reset();
       $('#candidateDialog').close();
@@ -831,18 +787,27 @@
       render();
     });
 
-    /* ── バックアップ ── */
+
     function exportBackup() {
-      const payload = { app: 'DJオファー屋さん太郎', version: 2, exportedAt: new Date().toISOString(), data };
+      const payload = {
+        app: 'DJオファー屋さん太郎',
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        data
+      };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
       const a = document.createElement('a');
       a.href = url;
-      a.download = `dj_offer_backup_${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}.json`;
-      document.body.appendChild(a); a.click(); a.remove();
+      a.download = `dj_offer_backup_${y}-${m}-${d}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
       URL.revokeObjectURL(url);
-      toast('バックアップを書き出しました');
     }
 
     $('#importFile').addEventListener('change', async (e) => {
@@ -852,23 +817,38 @@
         const text = await file.text();
         const json = JSON.parse(text);
         const imported = json.data || json;
-        if (!Array.isArray(imported.events) || !Array.isArray(imported.candidates)) throw new Error('invalid');
-        for (const ev of imported.events) { if (typeof ev.id !== 'string' || typeof ev.name !== 'string') throw new Error('invalid event'); }
-        for (const c of imported.candidates) { if (typeof c.id !== 'string' || typeof c.dj !== 'string') throw new Error('invalid candidate'); }
+        if (!imported.events || !Array.isArray(imported.events) || !imported.candidates || !Array.isArray(imported.candidates)) {
+          throw new Error('invalid backup');
+        }
         if (!confirm('現在のデータをバックアップ内容で置き換えますか？')) return;
-        data = imported; save();
-        currentTab = 'events'; filter = 'すべて';
-        $('#settingsDialog').close(); render();
-        toast('バックアップを読み込みました');
-      } catch { alert('読み込みできませんでした。正しいJSONバックアップファイルを選んでください。'); }
-      finally { e.target.value = ''; }
+        data = imported;
+        save();
+        currentTab = 'events';
+        filter = 'すべて';
+        $('#settingsDialog').close();
+        render();
+        alert('バックアップを読み込みました');
+      } catch (err) {
+        alert('読み込みできませんでした。JSONバックアップファイルを選んでください。');
+      } finally {
+        e.target.value = '';
+      }
     });
 
-    /* ── タブ ── */
-    $('#addBtn').addEventListener('click', () => currentTab === 'events' ? openEventDialog() : openCandidateDialog());
-    $('#settingsBtn').addEventListener('click', () => $('#settingsDialog').showModal());
-    $$('.tab').forEach(b => b.addEventListener('click', () => { currentTab = b.dataset.tab; filter = 'すべて'; render(); }));
-    $$('[data-close]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
+    function resetAllData() {
+      if (!confirm('全データを削除しますか？')) return;
+      if (!confirm('バックアップがない場合は元に戻せません。本当に削除しますか？')) return;
+      data = { events: [], candidates: [] };
+      save();
+      currentTab = 'events';
+      filter = 'すべて';
+      $('#settingsDialog').close();
+      render();
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s]));
+    }
 
     render();
   </script>
