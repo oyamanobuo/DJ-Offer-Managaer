@@ -110,12 +110,14 @@
       display: inline-flex; align-items: center; border-radius: 999px;
       padding: 5px 9px; font-size: 11px; font-weight: 800; white-space: nowrap;
     }
+    .badge-btn { border: 1px solid transparent; cursor: pointer; }
     .b-progress { color: #c9b8ff; background: rgba(139,92,246,.18); }
     .b-offer { color: #ffc27e; background: rgba(255,159,67,.14); }
     .b-ready { color: #c8ccd6; background: rgba(255,255,255,.09); }
     .b-done { color: #91efbd; background: rgba(65,209,139,.14); }
     .b-ng { color: #ffa1a1; background: rgba(255,107,107,.14); }
     .b-fixed { color: #91efbd; background: rgba(65,209,139,.16); border: 1px solid rgba(65,209,139,.3); }
+    .b-unfixed { color: var(--muted); background: rgba(255,255,255,.06); border: 1px solid var(--line); }
     .count { font-weight: 600; font-size: 14px; color: var(--muted); }
     .arrow { color: var(--muted); font-size: 20px; }
 
@@ -244,26 +246,6 @@
     .del-sheet strong { font-size: 15px; font-weight: 600; }
     .del-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
 
-    /* 出演順ブロック */
-    .lineup-block {
-      margin-top: 10px;
-      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.025)), var(--card);
-      border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow);
-      display: grid; gap: 12px;
-    }
-    .lineup-title { font-size: 12px; font-weight: 700; color: var(--muted); }
-    .lineup-group { display: grid; gap: 6px; }
-    .lineup-group-label { font-size: 11px; font-weight: 800; color: var(--orange); }
-    .lineup-list { display: grid; gap: 6px; }
-    .lineup-item {
-      display: flex; align-items: center; gap: 9px;
-      background: rgba(255,255,255,.045); border: 1px solid var(--line);
-      border-radius: 11px; padding: 9px 11px;
-    }
-    .lineup-handle { color: var(--muted); font-size: 15px; cursor: grab; touch-action: none; }
-    .lineup-name { font-size: 13px; font-weight: 600; }
-    .lineup-item.sortable-ghost { opacity: .35; }
-    .lineup-item.sortable-chosen { background: rgba(139,92,246,.15); border-color: rgba(139,92,246,.4); }
     .cand-item.sortable-ghost { opacity: .35; }
     .cand-item.sortable-chosen { background: rgba(139,92,246,.1); }
 
@@ -344,10 +326,9 @@
       <input type="hidden" name="editId">
       <div class="field"><label>イベント名</label><input name="name" required placeholder="例：KNOT Saturday"></div>
       <div class="field"><label>日付</label><input name="date" type="date" required></div>
-      <div class="field"><label>時間</label><input name="time" placeholder="22:00-05:00"></div>
+      <div class="field"><label>時間</label><input name="time" placeholder="例：1800-2400 / 22:00-05:00"></div>
       <div class="field"><label>会場</label><input name="venue" placeholder="例：池袋 KNOT"></div>
       <div class="field"><label>ジャンル</label><input name="genre" placeholder="例：All Good Music"></div>
-      <div class="field"><label>OPEN時間</label><input name="openTime" placeholder="例：18:00 - 24:00"></div>
       <div class="field"><label>入場料</label><input name="fee" placeholder="例：¥1000/1D"></div>
       <div class="form-grid">
         <div class="field"><label>必要人数</label><input name="slots" type="number" min="1" value="5"></div>
@@ -544,8 +525,8 @@
               </div>
             </div>
             <div class="right-info">
-              <span class="badge ${badgeClass(e.status)}">${escapeHtml(e.status)}</span>
-              ${e.fixed ? `<span class="badge b-fixed">確定</span>` : ''}
+              <button class="badge badge-btn ${badgeClass(e.status)}" data-ev-status="${escapeHtml(e.id)}">${escapeHtml(e.status)}</button>
+              <button class="badge badge-btn ${e.fixed ? 'b-fixed' : 'b-unfixed'}" data-ev-fixed="${escapeHtml(e.id)}">${e.fixed ? '確定' : '未確定'}</button>
               <span class="count">${okCount(e.id)}/${e.slots||0}人</span>
               <span class="arrow">›</span>
             </div>
@@ -596,11 +577,9 @@
         ${candidates.length
           ? `<div class="cands-wrap" id="candsWrap" data-manual="${isManual}">${candidates.map(c => candidateCard(c, isManual)).join('')}</div>`
           : `<div class="empty">候補がありません</div>`}
-        ${selectedEvent ? lineupOrderBlock(selectedEvent) : ''}
         ${selectedEvent && selectedEvent.fixed ? detailExportBlock(selectedEvent) : ''}
         ${filter !== 'すべて' ? offerMsgBlock(filter) : ''}`;
       $$('.c-memo-text').forEach(ta => autoResize(ta));
-      initLineupSortable();
       if (isManual) initCandsSortable();
     }
     function setCandSort(s) { candSort = s; render(); }
@@ -622,54 +601,8 @@
       });
     }
 
-    /* ── 出演順（OKのみ・区分別ドラッグ並び替え） ── */
+    /* ── 出演区分ラベル ── */
     const ROLE_LABELS = { DJ: 'DJ', LIVE: 'LIVE', GUEST_DJ: 'GUEST DJ', GUEST_LIVE: 'GUEST LIVE' };
-    const ROLE_KEYS = ['GUEST_DJ', 'GUEST_LIVE', 'DJ', 'LIVE'];
-
-    function lineupOrderBlock(ev) {
-      const okList = data.candidates.filter(c => c.eventId === ev.id && c.status === 'OK');
-      if (!okList.length) return '';
-      const groups = ROLE_KEYS.map(roleKey => {
-        const items = okList
-          .filter(c => (c.role || 'DJ') === roleKey)
-          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-        if (!items.length) return '';
-        return `
-          <div class="lineup-group">
-            <div class="lineup-group-label">${ROLE_LABELS[roleKey]}</div>
-            <div class="lineup-list" data-role-group="${roleKey}" data-event-id="${escapeHtml(ev.id)}">
-              ${items.map(c => `
-                <div class="lineup-item" data-cid="${escapeHtml(c.id)}">
-                  <span class="lineup-handle">⠿</span>
-                  <span class="lineup-name">${escapeHtml(c.dj)}</span>
-                </div>`).join('')}
-            </div>
-          </div>`;
-      }).join('');
-      return `
-        <div class="lineup-block">
-          <div class="lineup-title">🎚 出演順（ドラッグで並び替え）</div>
-          ${groups}
-        </div>`;
-    }
-
-    function initLineupSortable() {
-      if (typeof Sortable === 'undefined') return;
-      $$('.lineup-list').forEach(el => {
-        Sortable.create(el, {
-          animation: 150,
-          handle: '.lineup-handle',
-          onEnd: () => {
-            const roleKey = el.dataset.roleGroup;
-            $$('.lineup-item', el).forEach((item, idx) => {
-              const c = data.candidates.find(x => x.id === item.dataset.cid);
-              if (c) c.order = idx;
-            });
-            save();
-          }
-        });
-      });
-    }
 
     /* ── 確定イベントの詳細書き出し ── */
     function detailExportBlock(ev) {
@@ -708,10 +641,31 @@
       if (dj.length) { lines.push(''); lines.push('DJ: '); lines.push(...dj); }
       if (live.length) { lines.push(''); lines.push('LIVE: '); lines.push(...live); }
 
-      const openFee = [ev.openTime, ev.fee].filter(Boolean).join('  ');
+      const timeDisplay = formatEventTimeForDetail(ev.time);
+      const openFee = [timeDisplay, ev.fee].filter(Boolean).join('  ');
       if (openFee) { lines.push(''); lines.push(openFee); }
 
       return lines.join('\n');
+    }
+
+    /* 「1800-2400」「22:00-05:00」などを「18:00 - 24:00」表記に変換 */
+    function formatEventTimeForDetail(timeStr) {
+      if (!timeStr) return '';
+      const raw = timeStr.trim();
+      // 区切り文字（- ～ 〜 -> など）でレンジ分割を試みる
+      const m = raw.match(/^(.+?)\s*[-~〜]\s*(.+)$/);
+      if (!m) return raw; // パターンに合わない場合はそのまま
+      const fmt = part => {
+        const p = part.trim();
+        // 既に hh:mm 形式
+        let mm = p.match(/^(\d{1,2}):(\d{2})$/);
+        if (mm) return `${mm[1].padStart(2,'0')}:${mm[2]}`;
+        // 4桁 hhmm 形式
+        mm = p.match(/^(\d{1,2})(\d{2})$/);
+        if (mm) return `${mm[1].padStart(2,'0')}:${mm[2]}`;
+        return p;
+      };
+      return `${fmt(m[1])} - ${fmt(m[2])}`;
     }
 
     function offerMsgBlock(eventId) {
@@ -796,9 +750,9 @@
 
     /* ── イベントデリゲーション ── */
     document.addEventListener('click', e => {
-      // イベントカードタップ → 候補へ（編集・削除ボタンは除く）
+      // イベントカードタップ → 候補へ（編集・削除・ステータス・確定ボタンは除く）
       const evCard = e.target.closest('[data-ev-cands]');
-      if (evCard && !e.target.closest('[data-ev-edit]') && !e.target.closest('[data-ev-del]')) {
+      if (evCard && !e.target.closest('[data-ev-edit]') && !e.target.closest('[data-ev-del]') && !e.target.closest('[data-ev-status]') && !e.target.closest('[data-ev-fixed]')) {
         showEventDetail(evCard.dataset.evCands); return;
       }
       // イベント編集
@@ -807,6 +761,12 @@
       // イベント削除
       const evDel = e.target.closest('[data-ev-del]');
       if (evDel) { askDelete('event', evDel.dataset.evDel); return; }
+      // イベントステータス切り替え
+      const evStatus = e.target.closest('[data-ev-status]');
+      if (evStatus) { cycleEventStatus(evStatus.dataset.evStatus); return; }
+      // イベント確定トグル
+      const evFixed = e.target.closest('[data-ev-fixed]');
+      if (evFixed) { toggleEventFixed(evFixed.dataset.evFixed); return; }
       // ステータスボタン
       const sb = e.target.closest('[data-sid]');
       if (sb) { setCandidateStatus(sb.dataset.sid, sb.dataset.sval); return; }
@@ -843,6 +803,24 @@
       currentTab = 'candidates';
       filter = id;
       render();
+    }
+
+    const EVENT_STATUS_CYCLE = ['準備中', 'オファー中', '進行中', '終了'];
+    function cycleEventStatus(id) {
+      const ev = getEvent(id);
+      if (!ev) return;
+      const idx = EVENT_STATUS_CYCLE.indexOf(ev.status);
+      ev.status = EVENT_STATUS_CYCLE[(idx + 1) % EVENT_STATUS_CYCLE.length];
+      save(); render();
+      toast(`ステータスを「${ev.status}」に変更しました`);
+    }
+
+    function toggleEventFixed(id) {
+      const ev = getEvent(id);
+      if (!ev) return;
+      ev.fixed = !ev.fixed;
+      save(); render();
+      toast(ev.fixed ? 'イベントを確定にしました' : '確定を解除しました');
     }
 
     function setCandidateStatus(id, status) {
@@ -919,7 +897,6 @@
         form.time.value = ev.time || '';
         form.venue.value = ev.venue || '';
         form.genre.value = ev.genre || '';
-        form.openTime.value = ev.openTime || '';
         form.fee.value = ev.fee || '';
         form.slots.value = ev.slots || 1;
         form.status.value = ev.status;
@@ -946,7 +923,6 @@
           ev.time = fd.get('time').trim();
           ev.venue = fd.get('venue').trim();
           ev.genre = fd.get('genre').trim();
-          ev.openTime = fd.get('openTime').trim();
           ev.fee = fd.get('fee').trim();
           ev.slots = Number(fd.get('slots') || 1);
           ev.status = fd.get('status');
@@ -961,7 +937,6 @@
           time: fd.get('time').trim(),
           venue: fd.get('venue').trim(),
           genre: fd.get('genre').trim(),
-          openTime: fd.get('openTime').trim(),
           fee: fd.get('fee').trim(),
           slots: Number(fd.get('slots') || 1),
           status: fd.get('status'),
