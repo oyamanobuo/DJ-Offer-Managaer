@@ -805,12 +805,13 @@
       render();
     }
 
-    const EVENT_STATUS_CYCLE = ['準備中', 'オファー中', '進行中', '終了'];
+    const EVENT_STATUS_CYCLE = ['準備中', 'オファー中', '進行中'];
     function cycleEventStatus(id) {
       const ev = getEvent(id);
       if (!ev) return;
       const idx = EVENT_STATUS_CYCLE.indexOf(ev.status);
-      ev.status = EVENT_STATUS_CYCLE[(idx + 1) % EVENT_STATUS_CYCLE.length];
+      // 「終了」中、または一覧にない状態からは「準備中」に戻す。それ以外は巡回。
+      ev.status = idx === -1 ? EVENT_STATUS_CYCLE[0] : EVENT_STATUS_CYCLE[(idx + 1) % EVENT_STATUS_CYCLE.length];
       save(); render();
       toast(`ステータスを「${ev.status}」に変更しました`);
     }
