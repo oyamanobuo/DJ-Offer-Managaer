@@ -628,7 +628,7 @@
 
       const byRole = roleKey => okList
         .filter(c => (c.role || 'DJ') === roleKey)
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        .sort((a, b) => (a.manualOrder ?? 0) - (b.manualOrder ?? 0))
         .map(c => c.dj);
 
       const guestDj = byRole('GUEST_DJ');
@@ -661,8 +661,14 @@
         let mm = p.match(/^(\d{1,2}):(\d{2})$/);
         if (mm) return `${mm[1].padStart(2,'0')}:${mm[2]}`;
         // 4桁 hhmm 形式
-        mm = p.match(/^(\d{1,2})(\d{2})$/);
+        mm = p.match(/^(\d{2})(\d{2})$/);
+        if (mm) return `${mm[1]}:${mm[2]}`;
+        // 3桁 hmm 形式（例: 900 → 9:00）
+        mm = p.match(/^(\d{1})(\d{2})$/);
         if (mm) return `${mm[1].padStart(2,'0')}:${mm[2]}`;
+        // 時のみ（1〜2桁）形式 → :00 を補完
+        mm = p.match(/^(\d{1,2})$/);
+        if (mm) return `${mm[1].padStart(2,'0')}:00`;
         return p;
       };
       return `${fmt(m[1])} - ${fmt(m[2])}`;
