@@ -115,6 +115,7 @@
     .b-ready { color: #c8ccd6; background: rgba(255,255,255,.09); }
     .b-done { color: #91efbd; background: rgba(65,209,139,.14); }
     .b-ng { color: #ffa1a1; background: rgba(255,107,107,.14); }
+    .b-fixed { color: #91efbd; background: rgba(65,209,139,.16); border: 1px solid rgba(65,209,139,.3); }
     .count { font-weight: 600; font-size: 14px; color: var(--muted); }
     .arrow { color: var(--muted); font-size: 20px; }
 
@@ -136,6 +137,13 @@
     }
     .c-row:last-child { border-bottom: none; }
     .c-name { font-size: 14px; font-weight: 500; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cand-drag-handle { color: var(--muted); font-size: 16px; cursor: grab; touch-action: none; flex-shrink: 0; }
+    .manual-hint { color: var(--muted); font-size: 11px; margin: -2px 2px 8px; }
+    .role-tag {
+      flex-shrink: 0; font-size: 10px; font-weight: 800; padding: 3px 7px; border-radius: 7px;
+      color: var(--muted); background: rgba(255,255,255,.07);
+    }
+    .role-tag.role-GUEST_DJ, .role-tag.role-GUEST_LIVE { color: #ffc27e; background: rgba(255,159,67,.14); }
     .c-btns { display: flex; gap: 4px; flex-shrink: 0; align-items: center; }
     .status-btn {
       padding: 5px 9px; border-radius: 8px;
@@ -186,6 +194,11 @@
     }
     .field textarea { resize: vertical; min-height: 60px; }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .checkbox-field {
+      display: flex; align-items: center; gap: 9px;
+      font-size: 13px; color: var(--text); padding: 4px 2px;
+    }
+    .checkbox-field input[type="checkbox"] { width: 19px; height: 19px; accent-color: var(--primary); flex-shrink: 0; }
     .primary-btn {
       color: white; background: linear-gradient(135deg, var(--primary), var(--primary-2));
       border-radius: 15px; padding: 13px; font-weight: 800; margin-top: 4px;
@@ -231,6 +244,29 @@
     .del-sheet strong { font-size: 15px; font-weight: 600; }
     .del-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
 
+    /* 出演順ブロック */
+    .lineup-block {
+      margin-top: 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.025)), var(--card);
+      border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow);
+      display: grid; gap: 12px;
+    }
+    .lineup-title { font-size: 12px; font-weight: 700; color: var(--muted); }
+    .lineup-group { display: grid; gap: 6px; }
+    .lineup-group-label { font-size: 11px; font-weight: 800; color: var(--orange); }
+    .lineup-list { display: grid; gap: 6px; }
+    .lineup-item {
+      display: flex; align-items: center; gap: 9px;
+      background: rgba(255,255,255,.045); border: 1px solid var(--line);
+      border-radius: 11px; padding: 9px 11px;
+    }
+    .lineup-handle { color: var(--muted); font-size: 15px; cursor: grab; touch-action: none; }
+    .lineup-name { font-size: 13px; font-weight: 600; }
+    .lineup-item.sortable-ghost { opacity: .35; }
+    .lineup-item.sortable-chosen { background: rgba(139,92,246,.15); border-color: rgba(139,92,246,.4); }
+    .cand-item.sortable-ghost { opacity: .35; }
+    .cand-item.sortable-chosen { background: rgba(139,92,246,.1); }
+
     /* offer message block */
     .msg-block {
       margin-top: 10px;
@@ -252,13 +288,18 @@
     }
 
     /* sort row */
-    .sort-row { display: flex; gap: 6px; margin: 0 0 8px; }
+    .sort-row { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; }
+    .sort-row-spacer { flex: 1; }
     .sort-chip {
       border-radius: 999px; padding: 6px 12px;
       color: var(--muted); background: rgba(255,255,255,.06); border: 1px solid transparent;
       font-size: 12px; font-weight: 700;
     }
     .sort-chip.active { color: white; background: rgba(139,92,246,.22); border-color: rgba(139,92,246,.5); }
+    .ok-progress {
+      font-size: 13px; font-weight: 800; color: var(--muted);
+      flex-shrink: 0;
+    }
 
     /* candidates-list wrapper */
     .cands-wrap {
@@ -306,6 +347,8 @@
       <div class="field"><label>時間</label><input name="time" placeholder="22:00-05:00"></div>
       <div class="field"><label>会場</label><input name="venue" placeholder="例：池袋 KNOT"></div>
       <div class="field"><label>ジャンル</label><input name="genre" placeholder="例：All Good Music"></div>
+      <div class="field"><label>OPEN時間</label><input name="openTime" placeholder="例：18:00 - 24:00"></div>
+      <div class="field"><label>入場料</label><input name="fee" placeholder="例：¥1000/1D"></div>
       <div class="form-grid">
         <div class="field"><label>必要人数</label><input name="slots" type="number" min="1" value="5"></div>
         <div class="field"><label>状態</label>
@@ -314,6 +357,10 @@
           </select>
         </div>
       </div>
+      <label class="checkbox-field">
+        <input type="checkbox" name="fixed">
+        <span>このイベントを確定にする（詳細を書き出せるようになります）</span>
+      </label>
       <button class="primary-btn" id="eventSubmitBtn">追加する</button>
     </form>
   </dialog>
@@ -328,6 +375,14 @@
       <input type="hidden" name="editId">
       <div class="field"><label>DJ名</label><input name="dj" required placeholder="例：PINO"></div>
       <div class="field"><label>イベント</label><select name="eventId" id="candidateEventSelect"></select></div>
+      <div class="field"><label>出演区分</label>
+        <select name="role">
+          <option value="DJ">DJ</option>
+          <option value="LIVE">LIVE</option>
+          <option value="GUEST_DJ">GUEST DJ</option>
+          <option value="GUEST_LIVE">GUEST LIVE</option>
+        </select>
+      </div>
       <div class="field"><label>状態</label>
         <select name="status">
           <option>候補</option><option>オファー済</option><option>OK</option><option>NG</option>
@@ -376,6 +431,7 @@
 
   <div id="toast"></div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
   <script>
     const STORAGE_KEY = 'dj-offer-manager-dark-v1';
     const $ = (q, root = document) => root.querySelector(q);
@@ -489,6 +545,7 @@
             </div>
             <div class="right-info">
               <span class="badge ${badgeClass(e.status)}">${escapeHtml(e.status)}</span>
+              ${e.fixed ? `<span class="badge b-fixed">確定</span>` : ''}
               <span class="count">${okCount(e.id)}/${e.slots||0}人</span>
               <span class="arrow">›</span>
             </div>
@@ -505,7 +562,9 @@
     function renderCandidates() {
       const eventOptions = ['すべて', ...data.events.map(e => e.id)];
       let candidates = data.candidates.filter(c => filter === 'すべて' || c.eventId === filter);
-      if (candSort !== 'default') {
+      if (candSort === 'manual') {
+        candidates = [...candidates].sort((a, b) => (a.manualOrder ?? 0) - (b.manualOrder ?? 0));
+      } else if (candSort !== 'default') {
         const priority = candSort === 'ok' ? 'OK' : candSort === 'offer' ? 'オファー済' : 'NG';
         candidates = [...candidates].sort((a, b) => {
           const ap = a.status === priority ? -1 : STATUS_ORDER[a.status] ?? 9;
@@ -515,10 +574,15 @@
       } else {
         candidates = [...candidates].sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9));
       }
-      const sortBtns = ['default','ok','offer','ng'].map(s => {
-        const label = s === 'default' ? '並び順' : s === 'ok' ? 'OK順' : s === 'offer' ? '済順' : 'NG順';
+      const sortBtns = ['default','ok','offer','ng','manual'].map(s => {
+        const label = s === 'default' ? '並び順' : s === 'ok' ? 'OK順' : s === 'offer' ? '済順' : s === 'ng' ? 'NG順' : '任意';
         return `<button class="sort-chip ${candSort===s?'active':''}" onclick="setCandSort('${s}')">${label}</button>`;
       }).join('');
+      const selectedEvent = filter !== 'すべて' ? getEvent(filter) : null;
+      const okBadge = selectedEvent
+        ? `<span class="ok-progress">${okCount(selectedEvent.id)}/${selectedEvent.slots||0}</span>`
+        : '';
+      const isManual = candSort === 'manual';
       $('#main').innerHTML = `
         <div class="section-head"><h2>オファー候補</h2><button class="small-btn" onclick="openCandidateDialog()">＋ 候補</button></div>
         <div class="chips">
@@ -527,14 +591,128 @@
             return `<button class="chip ${filter===v?'active':''}" onclick="setFilter('${v}')">${label}</button>`;
           }).join('')}
         </div>
-        <div class="sort-row">${sortBtns}</div>
+        <div class="sort-row">${sortBtns}${okBadge ? `<span class="sort-row-spacer"></span>${okBadge}` : ''}</div>
+        ${isManual ? `<div class="manual-hint">⠿ をドラッグして好きな順番に並べ替えできます</div>` : ''}
         ${candidates.length
-          ? `<div class="cands-wrap">${candidates.map(candidateCard).join('')}</div>`
+          ? `<div class="cands-wrap" id="candsWrap" data-manual="${isManual}">${candidates.map(c => candidateCard(c, isManual)).join('')}</div>`
           : `<div class="empty">候補がありません</div>`}
+        ${selectedEvent ? lineupOrderBlock(selectedEvent) : ''}
+        ${selectedEvent && selectedEvent.fixed ? detailExportBlock(selectedEvent) : ''}
         ${filter !== 'すべて' ? offerMsgBlock(filter) : ''}`;
       $$('.c-memo-text').forEach(ta => autoResize(ta));
+      initLineupSortable();
+      if (isManual) initCandsSortable();
     }
     function setCandSort(s) { candSort = s; render(); }
+
+    function initCandsSortable() {
+      if (typeof Sortable === 'undefined') return;
+      const el = $('#candsWrap');
+      if (!el) return;
+      Sortable.create(el, {
+        animation: 150,
+        handle: '.cand-drag-handle',
+        onEnd: () => {
+          $$('.cand-item', el).forEach((item, idx) => {
+            const c = data.candidates.find(x => x.id === item.dataset.cid);
+            if (c) c.manualOrder = idx;
+          });
+          save();
+        }
+      });
+    }
+
+    /* ── 出演順（OKのみ・区分別ドラッグ並び替え） ── */
+    const ROLE_LABELS = { DJ: 'DJ', LIVE: 'LIVE', GUEST_DJ: 'GUEST DJ', GUEST_LIVE: 'GUEST LIVE' };
+    const ROLE_KEYS = ['GUEST_DJ', 'GUEST_LIVE', 'DJ', 'LIVE'];
+
+    function lineupOrderBlock(ev) {
+      const okList = data.candidates.filter(c => c.eventId === ev.id && c.status === 'OK');
+      if (!okList.length) return '';
+      const groups = ROLE_KEYS.map(roleKey => {
+        const items = okList
+          .filter(c => (c.role || 'DJ') === roleKey)
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        if (!items.length) return '';
+        return `
+          <div class="lineup-group">
+            <div class="lineup-group-label">${ROLE_LABELS[roleKey]}</div>
+            <div class="lineup-list" data-role-group="${roleKey}" data-event-id="${escapeHtml(ev.id)}">
+              ${items.map(c => `
+                <div class="lineup-item" data-cid="${escapeHtml(c.id)}">
+                  <span class="lineup-handle">⠿</span>
+                  <span class="lineup-name">${escapeHtml(c.dj)}</span>
+                </div>`).join('')}
+            </div>
+          </div>`;
+      }).join('');
+      return `
+        <div class="lineup-block">
+          <div class="lineup-title">🎚 出演順（ドラッグで並び替え）</div>
+          ${groups}
+        </div>`;
+    }
+
+    function initLineupSortable() {
+      if (typeof Sortable === 'undefined') return;
+      $$('.lineup-list').forEach(el => {
+        Sortable.create(el, {
+          animation: 150,
+          handle: '.lineup-handle',
+          onEnd: () => {
+            const roleKey = el.dataset.roleGroup;
+            $$('.lineup-item', el).forEach((item, idx) => {
+              const c = data.candidates.find(x => x.id === item.dataset.cid);
+              if (c) c.order = idx;
+            });
+            save();
+          }
+        });
+      });
+    }
+
+    /* ── 確定イベントの詳細書き出し ── */
+    function detailExportBlock(ev) {
+      const text = buildEventDetailText(ev);
+      return `
+        <div class="msg-block">
+          <div class="msg-label">📄 イベント詳細（確定）</div>
+          <div class="msg-body">${escapeHtml(text)}</div>
+          <button class="msg-copy-btn" data-msg="${escapeHtml(text)}">詳細をコピー</button>
+        </div>`;
+    }
+
+    function buildEventDetailText(ev) {
+      const d = new Date(ev.date + 'T00:00:00');
+      const dateStr = Number.isNaN(d.getTime()) ? ev.date : `${d.getMonth()+1}/${d.getDate()}`;
+      const okList = data.candidates.filter(c => c.eventId === ev.id && c.status === 'OK');
+
+      let lines = [];
+      lines.push(dateStr);
+      lines.push(ev.name);
+      if (ev.venue) lines.push(ev.venue);
+      if (ev.genre) lines.push(ev.genre);
+
+      const byRole = roleKey => okList
+        .filter(c => (c.role || 'DJ') === roleKey)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        .map(c => c.dj);
+
+      const guestDj = byRole('GUEST_DJ');
+      const guestLive = byRole('GUEST_LIVE');
+      const dj = byRole('DJ');
+      const live = byRole('LIVE');
+
+      if (guestDj.length) { lines.push(''); lines.push('GUEST DJ: '); lines.push(...guestDj); }
+      if (guestLive.length) { lines.push(''); lines.push('GUEST LIVE: '); lines.push(...guestLive); }
+      if (dj.length) { lines.push(''); lines.push('DJ: '); lines.push(...dj); }
+      if (live.length) { lines.push(''); lines.push('LIVE: '); lines.push(...live); }
+
+      const openFee = [ev.openTime, ev.fee].filter(Boolean).join('  ');
+      if (openFee) { lines.push(''); lines.push(openFee); }
+
+      return lines.join('\n');
+    }
 
     function offerMsgBlock(eventId) {
       const ev = getEvent(eventId);
@@ -563,11 +741,16 @@
       });
     }
 
-    function candidateCard(c) {
+    function candidateCard(c, isManual) {
       const memoHtml = `<div class="c-memo-row"><textarea class="c-memo-text" rows="1" placeholder="メモ" data-memo-id="${escapeHtml(c.id)}">${escapeHtml(c.memo||'')}</textarea></div>`;
+      const roleKey = c.role || 'DJ';
+      const roleTag = `<span class="role-tag role-${roleKey}">${ROLE_LABELS[roleKey] || 'DJ'}</span>`;
+      const dragHandle = isManual ? `<span class="cand-drag-handle">⠿</span>` : '';
       return `
-        <div class="cand-item">
+        <div class="cand-item" data-cid="${escapeHtml(c.id)}">
           <div class="c-row">
+            ${dragHandle}
+            ${roleTag}
             <div class="c-name">${escapeHtml(c.dj)}</div>
             <div class="c-btns">
               ${statusBtn(c,'オファー済','offer','済')}
@@ -736,8 +919,11 @@
         form.time.value = ev.time || '';
         form.venue.value = ev.venue || '';
         form.genre.value = ev.genre || '';
+        form.openTime.value = ev.openTime || '';
+        form.fee.value = ev.fee || '';
         form.slots.value = ev.slots || 1;
         form.status.value = ev.status;
+        form.fixed.checked = !!ev.fixed;
         $('#eventDialogTitle').textContent = 'イベントを編集';
         $('#eventSubmitBtn').textContent = '保存する';
       } else {
@@ -751,6 +937,7 @@
       e.preventDefault();
       const fd = new FormData(e.currentTarget);
       const editId = fd.get('editId');
+      const fixed = fd.get('fixed') === 'on';
       if (editId) {
         const ev = getEvent(editId);
         if (ev) {
@@ -759,8 +946,11 @@
           ev.time = fd.get('time').trim();
           ev.venue = fd.get('venue').trim();
           ev.genre = fd.get('genre').trim();
+          ev.openTime = fd.get('openTime').trim();
+          ev.fee = fd.get('fee').trim();
           ev.slots = Number(fd.get('slots') || 1);
           ev.status = fd.get('status');
+          ev.fixed = fixed;
           toast('イベントを保存しました');
         }
       } else {
@@ -771,8 +961,11 @@
           time: fd.get('time').trim(),
           venue: fd.get('venue').trim(),
           genre: fd.get('genre').trim(),
+          openTime: fd.get('openTime').trim(),
+          fee: fd.get('fee').trim(),
           slots: Number(fd.get('slots') || 1),
-          status: fd.get('status')
+          status: fd.get('status'),
+          fixed: fixed
         });
         toast('イベントを追加しました');
       }
@@ -795,6 +988,7 @@
         if (!c) return;
         form.dj.value = c.dj;
         select.value = c.eventId;
+        form.role.value = c.role || 'DJ';
         form.status.value = c.status;
         form.memo.value = c.memo || '';
         $('#candidateDialogTitle').textContent = '候補を編集';
@@ -813,10 +1007,12 @@
       const editId = fd.get('editId');
       const djName = fd.get('dj').trim();
       const eventId = fd.get('eventId');
+      const role = fd.get('role') || 'DJ';
       if (editId) {
         const c = data.candidates.find(x => x.id === editId);
         if (c) {
           c.dj = djName; c.eventId = eventId;
+          c.role = role;
           c.status = fd.get('status');
           c.memo = fd.get('memo').trim();
           toast('候補を保存しました');
@@ -824,9 +1020,12 @@
       } else {
         const dup = data.candidates.find(c => c.eventId === eventId && c.dj.toLowerCase() === djName.toLowerCase());
         if (dup) { alert(`「${djName}」はこのイベントにすでに追加されています。`); return; }
+        const sameRoleCount = data.candidates.filter(c => c.eventId === eventId && (c.role || 'DJ') === role).length;
+        const sameEventCount = data.candidates.filter(c => c.eventId === eventId).length;
         data.candidates.push({
-          id: crypto.randomUUID(), eventId, dj: djName,
-          status: fd.get('status'), memo: fd.get('memo').trim()
+          id: crypto.randomUUID(), eventId, dj: djName, role,
+          status: fd.get('status'), memo: fd.get('memo').trim(),
+          order: sameRoleCount, manualOrder: sameEventCount
         });
         toast('候補を追加しました');
       }
