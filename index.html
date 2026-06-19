@@ -268,12 +268,20 @@
       border-radius: 12px; padding: 11px; font-size: 13px; font-weight: 800;
       box-shadow: 0 6px 18px rgba(139,92,246,.3);
     }
+    .msg-btn-row { display: flex; gap: 8px; }
+    .msg-btn-row .msg-copy-btn { flex: 1; }
+    .msg-refresh-btn {
+      flex-shrink: 0;
+      color: var(--muted); background: rgba(255,255,255,.07); border: 1px solid var(--line);
+      border-radius: 12px; padding: 11px 13px; font-size: 13px; font-weight: 700;
+    }
 
     /* sort row */
-    .sort-row { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; }
+    .sort-row { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; overflow-x: auto; scrollbar-width: none; }
+    .sort-row::-webkit-scrollbar { display: none; }
     .sort-row-spacer { flex: 1; }
     .sort-chip {
-      border-radius: 999px; padding: 6px 12px;
+      border-radius: 999px; padding: 6px 12px; flex-shrink: 0;
       color: var(--muted); background: rgba(255,255,255,.06); border: 1px solid transparent;
       font-size: 12px; font-weight: 700;
     }
@@ -540,23 +548,35 @@
 
     /* ── オファー候補 ── */
     const STATUS_ORDER = { 'OK': 0, 'オファー済': 1, 'NG': 2, '候補': 3 };
-    function renderCandidates() {
-      const eventOptions = ['すべて', ...data.events.map(e => e.id)];
-      let candidates = data.candidates.filter(c => filter === 'すべて' || c.eventId === filter);
-      if (candSort === 'manual') {
-        candidates = [...candidates].sort((a, b) => (a.manualOrder ?? 0) - (b.manualOrder ?? 0));
-      } else if (candSort !== 'default') {
-        const priority = candSort === 'ok' ? 'OK' : candSort === 'offer' ? 'オファー済' : 'NG';
-        candidates = [...candidates].sort((a, b) => {
+
+    function sortCandidatesBy(list, sortType) {
+      if (sortType === 'manual') {
+        return [...list].sort((a, b) => (a.manualOrder ?? 0) - (b.manualOrder ?? 0));
+      }
+      if (sortType === 'kana') {
+        return [...list].sort((a, b) => a.dj.localeCompare(b.dj, 'ja'));
+      }
+      if (sortType === 'az') {
+        return [...list].sort((a, b) => a.dj.localeCompare(b.dj, 'en', { sensitivity: 'base' }));
+      }
+      if (sortType !== 'default') {
+        const priority = sortType === 'ok' ? 'OK' : sortType === 'offer' ? 'オファー済' : 'NG';
+        return [...list].sort((a, b) => {
           const ap = a.status === priority ? -1 : STATUS_ORDER[a.status] ?? 9;
           const bp = b.status === priority ? -1 : STATUS_ORDER[b.status] ?? 9;
           return ap - bp;
         });
-      } else {
-        candidates = [...candidates].sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9));
       }
-      const sortBtns = ['default','ok','offer','ng','manual'].map(s => {
-        const label = s === 'default' ? '並び順' : s === 'ok' ? 'OK順' : s === 'offer' ? '済順' : s === 'ng' ? 'NG順' : '任意';
+      return [...list].sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9));
+    }
+
+    function renderCandidates() {
+      const eventOptions = ['すべて', ...data.events.map(e => e.id)];
+      let candidates = data.candidates.filter(c => filter === 'すべて' || c.eventId === filter);
+      candidates = sortCandidatesBy(candidates, candSort);
+      const sortBtns = ['default','ok','offer','ng','kana','az','manual'].map(s => {
+        const label = s === 'default' ? '並び順' : s === 'ok' ? 'OK順' : s === 'offer' ? '済順' : s === 'ng' ? 'NG順'
+          : s === 'kana' ? '50音順' : s === 'az' ? 'A-Z順' : '任意';
         return `<button class="sort-chip ${candSort===s?'active':''}" onclick="setCandSort('${s}')">${label}</button>`;
       }).join('');
       const selectedEvent = filter !== 'すべて' ? getEvent(filter) : null;
@@ -610,15 +630,24 @@
       return `
         <div class="msg-block">
           <div class="msg-label">📄 イベント詳細（確定）</div>
-          <div class="msg-body">${escapeHtml(text)}</div>
-          <button class="msg-copy-btn" data-msg="${escapeHtml(text)}">詳細をコピー</button>
+          <div class="msg-body" id="detailMsgBody">${escapeHtml(text)}</div>
+          <div class="msg-btn-row">
+            <button class="msg-refresh-btn" data-detail-refresh="${escapeHtml(ev.id)}" title="再読み込み">⟳ 再読み込み</button>
+            <button class="msg-copy-btn" data-msg="${escapeHtml(text)}">詳細をコピー</button>
+          </div>
         </div>`;
+    }
+
+    function refreshDetailBlock(eventId) {
+      render(); // 候補の最新ステータス・並び順を反映して再描画
+      toast('詳細を再読み込みしました');
     }
 
     function buildEventDetailText(ev) {
       const d = new Date(ev.date + 'T00:00:00');
       const dateStr = Number.isNaN(d.getTime()) ? ev.date : `${d.getMonth()+1}/${d.getDate()}`;
-      const okList = data.candidates.filter(c => c.eventId === ev.id && c.status === 'OK');
+      let okList = data.candidates.filter(c => c.eventId === ev.id && c.status === 'OK');
+      okList = sortCandidatesBy(okList, candSort); // 現在表示中の並び順を使用
 
       let lines = [];
       lines.push(dateStr);
@@ -628,7 +657,6 @@
 
       const byRole = roleKey => okList
         .filter(c => (c.role || 'DJ') === roleKey)
-        .sort((a, b) => (a.manualOrder ?? 0) - (b.manualOrder ?? 0))
         .map(c => c.dj);
 
       const guestDj = byRole('GUEST_DJ');
@@ -788,6 +816,9 @@
       // オファー文コピー
       const copyBtn = e.target.closest('[data-msg]');
       if (copyBtn) { copyMsg(copyBtn.dataset.msg); return; }
+      // イベント詳細 再読み込み
+      const refreshBtn = e.target.closest('[data-detail-refresh]');
+      if (refreshBtn) { refreshDetailBlock(refreshBtn.dataset.detailRefresh); return; }
     });
 
     document.addEventListener('input', e => {
